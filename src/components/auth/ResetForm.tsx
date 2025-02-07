@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { LoginSchema } from "@/schema";
+import { ResetSchema } from "@/schema";
 import { Input } from "@/components/ui/input";
 import {
     Form,
@@ -16,43 +16,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/FormError";
 import { FormSuccess } from "@/components/FormSuccess";
-import { login } from "@/actions/login";
 import { useState, useTransition } from "react";
-import Socials from "@/components/auth/Socials";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-
-export default function LoginForm() {
-    const searchParams = useSearchParams();
-    const urlError = searchParams.get("error") === "OAuthAccountNotLinked" ? "Email jest już za pomocą innej platformy!" : "";
+import { reset } from "@/actions/reset";
 
 
-
+export default function ResetForm() {
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
     
     const [isPending, startTransition] = useTransition();
 
-    const form = useForm<z.infer<typeof LoginSchema>>({
-        resolver: zodResolver(LoginSchema),
+    const form = useForm<z.infer<typeof ResetSchema>>({
+        resolver: zodResolver(ResetSchema),
         defaultValues: {
             email: "",
-            password: ""
         }
     });
 
-    const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+    const onSubmit = (values: z.infer<typeof ResetSchema>) => {
         setError("");
         setSuccess("");
-
+        
         startTransition(() => {
-            login(values)
+            reset(values)
                 .then((data) => {
                     setError(data?.error);
                     setSuccess(data?.success);
                 })
     });
-    }
+    };
 
     return (
         <Form {...form}>
@@ -76,40 +68,14 @@ export default function LoginForm() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({field}) => (
-                            <FormItem>
-                                <FormLabel>Hasło</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            placeholder="*******" 
-                                            type = "password"
-                                            />
-                                    </FormControl>
-                                    <Button 
-                                        size="sm"
-                                        variant="link"
-                                        asChild
-                                        className="text-white px-0 "
-                                    >
-                                        <Link href="reset">Nie pamiętasz hasła?</Link>
-
-                                    </Button>
-                                    <FormMessage></FormMessage>
-                            </FormItem>
-                        )}
-                    />
+                    
                 </div>
                 
-                <FormError message={error || urlError}></FormError>
+                <FormError message={error}></FormError>
                 <FormSuccess message={success}></FormSuccess>
                 
-                <Button disabled={isPending}>Zaloguj się</Button>
-                <Socials></Socials>
+                <Button disabled={isPending}>Następny krok </Button>
+                
             </form>
         </Form>
     )

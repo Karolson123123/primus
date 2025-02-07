@@ -12,22 +12,20 @@ import {
     FormItem,
     FormLabel,
     FormMessage
-
-
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/FormError";
 import { FormSuccess } from "@/components/FormSuccess";
 import { register } from "@/actions/register";
 import { useState, useTransition } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
-
+import Socials from "@/components/auth/Socials";
 
 export default function RegisterForm() {
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
     
+    
+
     const [isPending, startTransition] = useTransition();
 
     const form = useForm<z.infer<typeof RegisterSchema>>({
@@ -43,7 +41,6 @@ export default function RegisterForm() {
         setError("");
         setSuccess("");
 
-
         startTransition(() => {
             register(values)
                 .then((data) => {
@@ -52,7 +49,7 @@ export default function RegisterForm() {
                 })
     });
     }
-
+    
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -116,16 +113,7 @@ export default function RegisterForm() {
                 <FormSuccess message={success}></FormSuccess>
 
                 <Button disabled={isPending}>Zarejestruj się</Button>
-                <div className="flex my-2 gap-1">
-                    <Button className="px-6 py-3 flex-1 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]">
-                        <FcGoogle className="w-5 h-5"></FcGoogle>
-                    </Button>
-                    <Button className="px-6 py-3 flex-1">
-                        <FaGithub className="w-5 h-5"></FaGithub>
-                    </Button>
-                </div>
-                
-                
+                <Socials></Socials>
             </form>
         </Form>
     )

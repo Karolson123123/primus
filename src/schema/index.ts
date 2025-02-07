@@ -23,3 +23,16 @@ export const RegisterSchema = z.object({
     })
 });
 
+export const ResetSchema = z.object({
+    email: z.string().email({
+        message: "Email jest wymagany"
+    }),
+
+});
+
+export const NewPasswordSchema = z.object({
+    password: z.string().min(6,{
+        message: "Hasło musie mieć co najmniej 6 znaków"
+    }),
+
+});
