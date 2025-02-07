@@ -7,7 +7,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export default function Home() {
-  return(
+  return (
     <>
         <nav className="flex justify-between p-2 bg-[rgba(14,13,13,0.9)] sticky top-0 z-[100] h-20">
           <Link href={"/"}>
