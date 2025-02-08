@@ -1,8 +1,19 @@
+"use client";
+
 import LoginForm from "@/components/auth/LoginForm";
+import { useEffect } from "react";
 
 
 export default function Login() {
-
+    useEffect(() => {
+        const hasReloaded = sessionStorage.getItem("hasReloaded");
+        if (!hasReloaded) {
+            sessionStorage.setItem("hasReloaded", "true");
+            window.location.reload();
+        } else {
+            sessionStorage.removeItem("hasReloaded");
+        }
+    }, []);
     return (
         <div className="grid place-items-center bg-[var(--black)] h-screen">
             <main className="p-8 bg-[var(--cardblack)]  rounded-lg  w-[50%] h-[50%] flex flex-col justify-around" >

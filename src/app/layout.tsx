@@ -1,21 +1,32 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "EVolve",
   description: "Ładowanie samochodów elektrycznych"
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session  = await auth();
   return (
-    <html lang="en">
-      <body className={`antialiased`}>
-        {children}
-      </body>
-    </html>
+    <SessionProvider session={session}>
+      <html lang="pl">
+        <body className={`antialiased`}>
+          <Toaster theme="dark" toastOptions={{
+            style: {
+              backgroundColor: "var(--yellow)"
+            }
+          }} />
+          {children}
+        </body>
+      </html>
+    </SessionProvider>
   );
 }

@@ -4,10 +4,13 @@ import { db } from "@/lib/db";
 import authConfig from "@/auth.config";
 import NextAuth, { type DefaultSession } from "next-auth"
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
+import { getAccountByUserId } from "./data/account";
 
 
 export type ExtendedUser = DefaultSession["user"] & {
-    role: "ADMIN" | "USER"
+    role: "ADMIN" | "USER",
+    isTwoFactorEnabled: boolean,
+    isOAuth: boolean,
 }
 
 declare module "next-auth" {
@@ -69,16 +72,35 @@ export const {
                 session.user.role = token.role as "ADMIN" | "USER";
             }
 
+            if (session.user) {
+                session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean;
+            }
+            
+            if (session.user) {
+                session.user.name = token.name;
+                session.user.email = token.email;
+                session.user.isOAuth = token.isOAuth as boolean;
+            }
+
             return session;
         },
         async jwt({ token }) {
+            
             if (!token.sub) return token;
 
             const existingUser = await getUserById(token.sub);
 
             if (!existingUser) return token;
 
+            const existingAccount = await getAccountByUserId(
+                existingUser.id
+            )
+
+            token.isOAuth = !!existingAccount;
+            token.name = existingUser.name;
+            token.email = existingUser.email
             token.role = existingUser.role;
+            token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
 
             return token;
         }

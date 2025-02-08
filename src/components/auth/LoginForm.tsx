@@ -40,6 +40,7 @@ export default function LoginForm() {
         defaultValues: {
             email: "",
             password: "",
+            code: "",
         }
     });
 
