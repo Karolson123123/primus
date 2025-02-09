@@ -9,11 +9,16 @@ interface LogoutButtonProps{
 
 export const LogoutButton = ({
     children
+    
 }: LogoutButtonProps) => {
     const onClick = () => {
+        
         logout();
+        setTimeout(() => {  
+          window.location.reload();
+        }, 200);
     };
-
+    
     return (
         <Button onClick={onClick} className="cursor-pointer">
             {children}

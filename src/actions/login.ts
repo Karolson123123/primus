@@ -11,7 +11,7 @@ import { sendVerificationEmail, sendTwoFactorTokenEmail } from "@/lib/mail";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
 import { db } from "@/lib/db";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
-
+import bcrypt from "bcryptjs";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
     const validatedFields = LoginSchema.safeParse(values);
@@ -28,6 +28,11 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
         return { error: "Dla podanego adresu email nie ma konta!" };
     }
     
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+    if (!isPasswordValid) {
+        throw new Error('Błędne hasło');
+    }
+
     if (!existingUser.emailVerified) {
         const verificationToken = await generateVerificationToken(existingUser.email);
 
@@ -53,7 +58,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
                 return { error: "Nieprawidłowy kod!" };
             }
 
-            const hasExpired = new Date(twoFactorToken.expires) <new Date();
+            const hasExpired = new Date(twoFactorToken.expires) < new Date();
 
             if (hasExpired) {
                 return { error: "Kod wygasł!" };
@@ -87,6 +92,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
 
             return { twoFactor: true };
         }
+        
     }
 
     try {

@@ -59,8 +59,6 @@ export const {
                 
             }
             
-            
-
             return true;  
         },
         async session({ token, session }) {

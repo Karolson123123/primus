@@ -1,19 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@/components/auth/UserButton";
+import Logo from "@/components/Logo";
 
 export const Navbar = () => {
     const pathname = usePathname();
     
     return (
         <nav className="flex sticky top-0 h-20 bg-[--black] z-[100]  justify-between items-center  backdrop-blur-[8px] w-full p-2" style={{boxShadow: "0 2px 15px rgba(0, 0, 0, 0.5)"}}>
-            <Link href={"/"}>
-                <Image src={'Logo.svg'} alt="Logo EVolve" width={64} height={64}></Image>
-          </Link>
+            <Logo></Logo>
             <div className="flex gap-x-2">
                 <Button 
                     asChild
