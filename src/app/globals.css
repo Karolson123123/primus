@@ -1,6 +1,8 @@
+@import 'leaflet/dist/leaflet.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @layer base {
   :root {
@@ -78,4 +80,45 @@ body {
   font-family: 'Roboto', sans-serif;
   background-color: var(--background);
   color: #fff;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1; 
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  pointer-events: auto !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  border: none !important;
+  width: auto !important;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+.leaflet-popup {
+  margin-bottom: 0 !important;
+  pointer-events: auto !important;
+}
+
+.leaflet-interactive {
+  pointer-events: auto !important;
+}
+
+.leaflet-control {
+  pointer-events: auto !important;
 }

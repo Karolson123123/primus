@@ -1,0 +1,4 @@
+interface StationsInfoProps {
+    name?: string;
+    
+}

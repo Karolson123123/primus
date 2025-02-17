@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { newVerification } from "@/actions/new-verification";
 import { FormError } from "@/components/FormError";
 import { FormSuccess } from "@/components/FormSuccess";
+import Logo from "../Logo";
 
 
 export default function NewVerificationForm() {
@@ -40,6 +41,7 @@ export default function NewVerificationForm() {
     }, [onSubmit]);
     return(
         <>
+            <Logo></Logo>
             <h1 className="text-center font-semibold text-3xl">Potwierdzanie twojego adresu email</h1>
             <div className="flex justify-center items-center w-full flex-col gap-10">
                 {!success && !error &&(

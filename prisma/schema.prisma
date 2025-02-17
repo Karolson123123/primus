@@ -1,89 +1,174 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// prisma/schema.prisma
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
-  // uncomment next line if you use Prisma <5.10
-  // directUrl = env("DATABASE_URL_UNPOOLED")
-}
-
-enum UserRole {
-  ADMIN
-  USER
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-  image         String?
-  password      String?
-  role          UserRole @default(USER)
-  isOAuth      Account[]
-  isTwoFactorEnabled Boolean @default(false)
+  id                    String                 @id @default(cuid())
+  name                  String?
+  email                 String?                @unique
+  emailVerified         DateTime?              @map("email_verified")
+  image                 String?
+  password              String?
+  role                  UserRole               @default(USER)
+  isTwoFactorEnabled    Boolean                @default(false)
+  isOAuth               Account[]
   twoFactorConfirmation TwoFactorConfirmation?
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String  @map("user_id")
-  type               String
-  provider           String
-  providerAccountId  String  @map("provider_account_id")
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
- 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
 model VerificationToken {
-  id                 String  @id @default(cuid())
-  email              String
-  token              String @unique
-  expires            DateTime
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
 
   @@unique([email, token])
 }
 
 model PasswordResetToken {
-  id                 String  @id @default(cuid())
-  email              String
-  token              String @unique
-  expires            DateTime
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
 
   @@unique([email, token])
 }
 
 model TwoFactorToken {
-  id                 String  @id @default(cuid())
-  email              String
-  token              String @unique
-  expires            DateTime
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
 
   @@unique([email, token])
 }
 
 model TwoFactorConfirmation {
-  id                 String  @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-  @@unique([userId])
+model alembic_version {
+  version_num String @id(map: "alembic_version_pkc") @db.VarChar(32)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model charging_ports {
+  id                BigInt              @id
+  station_id        BigInt
+  power_kW          BigInt
+  status            String              @db.VarChar(255)
+  last_service_date DateTime            @db.Date
+  created_at        DateTime            @db.Date
+  charging_stations charging_stations   @relation(fields: [station_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_ports_station_id_foreign")
+  charging_sessions charging_sessions[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model charging_sessions {
+  id              BigInt         @id
+  user_id         BigInt
+  vehicle_id      BigInt
+  port_id         BigInt
+  start_time      DateTime       @db.Date
+  end_time        DateTime       @db.Date
+  energy_used_kWh Float
+  total_cost      Float
+  status          String         @db.VarChar(255)
+  charging_ports  charging_ports @relation(fields: [port_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_port_id_foreign")
+  users           users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_user_id_foreign")
+  vehicles        vehicles       @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_vehicle_id_foreign")
+  payments        payments[]
+}
+
+model charging_stations {
+  id             BigInt           @id
+  name           String           @db.VarChar(255)
+  lattitude      Float
+  longitide      Float
+  created_at     DateTime         @db.Date
+  charging_ports charging_ports[]
+}
+
+model discounts {
+  id                   BigInt   @id
+  code                 String   @db.VarChar(255)
+  description          String   @db.VarChar(255)
+  discround_percentage BigInt
+  expiration_date      DateTime @db.Date
+  created_at           DateTime @db.Date
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payments {
+  id                BigInt            @id
+  user_id           BigInt
+  session_id        BigInt
+  amount            Float
+  status            String            @db.VarChar(255)
+  transaction_id    BigInt
+  payment_method    String            @db.VarChar(255)
+  created_at        DateTime          @db.Date
+  charging_sessions charging_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_session_id_foreign")
+  users             users             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_user_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                        BigInt              @id
+  email                     String              @db.VarChar(255)
+  password                  String              @db.VarChar(255)
+  role                      String              @db.VarChar(255)
+  phone_number              Int                 @db.SmallInt
+  two_factor_enabled        Boolean
+  two_factor_secret         String              @db.VarChar(255)
+  first_name                String              @db.VarChar(255)
+  last_name                 String              @db.VarChar(255)
+  recently_updated_password Boolean
+  recently_                 BigInt
+  created_at                DateTime            @db.Date
+  charging_sessions         charging_sessions[]
+  payments                  payments[]
+  vehicles                  vehicles[]
+}
+
+model vehicles {
+  id                   BigInt              @id
+  user_id              BigInt
+  license_plate        String              @db.VarChar(255)
+  brand                String              @db.VarChar(255)
+  battery_capacity_kWh Int
+  bettery_condition    Float
+  max_charging_powerkW BigInt
+  created_at           DateTime            @db.Date
+  charging_sessions    charging_sessions[]
+  users                users               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vehicles_user_id_foreign")
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
