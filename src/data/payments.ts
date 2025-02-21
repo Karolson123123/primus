@@ -8,11 +8,13 @@ interface Payment {
 
 export const getStationsInfo = async (): Promise<Payment[] | null> => {
     try {
-        const response = await fetch('http://localhost:8000/payment', {
+        const response = await fetch('http://localhost:8000/payments', {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            credentials: 'include'
         });
 
         if (!response.ok) {

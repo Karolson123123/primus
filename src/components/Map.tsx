@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
@@ -6,14 +6,10 @@ import L from 'leaflet';
 import { LatLngTuple } from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import { useEffect, useState, useMemo } from 'react';
-import { getStationsInfo, getStationsWithPorts } from '@/data/stations';
+import { getStationsInfo } from '@/data/stations';
 import useGeoLocation from '@/lib/geo-location';  
-
-interface Port {
-    id: string;
-    power_kW: string;
-    status: string;
-}
+import { getPortsInfo } from '@/data/ports';
+import SearchBox from './SearchBox';
 
 interface Station {
     id: number;
@@ -21,8 +17,18 @@ interface Station {
     latitude: number;
     longitude: number;
     created_at: string;
-    ports: Port[];
 }
+
+
+interface Port {
+    id: number;
+    status: string;
+    created_at: string;
+    power_kW: number;
+    station_id: Station['id'];
+}
+
+
 
 const icon = L.icon({
   iconUrl: "/basic-marker.png",
@@ -102,27 +108,30 @@ function LocationUpdater({ position }: { position: LatLngTuple }) {
 
 export default function Map() {
     const [stations, setStations] = useState<Station[]>([]);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [ports, setPorts] = useState<Port[]>([]);
+
     const [activeMarker, setActiveMarker] = useState<number | null>(null);
-    
-    const refreshStations = async () => {
-        setIsRefreshing(true);
-        try {
-            const data = await getStationsWithPorts();
-            if (data) {
-                setStations(data);
+
+    useEffect(() => {
+        const fetchPorts = async () => {
+            try {
+                const portsData = await getPortsInfo();
+                console.log(portsData);
+                if (portsData) {
+                    setPorts(portsData);
+                }
+            } catch (error) {
+                console.error('Error fetching stations:', error);
             }
-        } catch (error) {
-            console.error('Error refreshing stations:', error);
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
+        };
+        fetchPorts();
+    }, []);
 
     useEffect(() => {
         const fetchStations = async () => {
             try {
-                const stationsData = await getStationsWithPorts();
+                const stationsData = await getStationsInfo();
+                console.log(stationsData);
                 if (stationsData) {
                     setStations(stationsData);
                 }
@@ -156,7 +165,7 @@ export default function Map() {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                
+                <SearchBox stations={stations}></SearchBox>
                 {location.loaded && !location.error && location.coordinates && (
                     <Marker 
                         icon={locationIcon} 
@@ -210,13 +219,13 @@ export default function Map() {
                     }`}
                     style={{ zIndex: 1000 , height: "95%" , width: "15%" }}
                 >
-                    <div 
-                        className='relative text-center h-full w-full flex flex-col items-center justify-center bg-[var(--background)] rounded-lg shadow-lg text-white'
+                        <div 
+                        className='relative text-center h-full w-full flex flex-col items-center justify-start bg-[var(--background)] rounded-lg shadow-lg text-white'
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setActiveMarker(null)}
-                            className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-700 transition-colors"
+                            className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-700 transition-colors z-[3]"
                         >
                             <svg
                                 className="w-6 h-6"
@@ -230,49 +239,37 @@ export default function Map() {
                                     strokeWidth={2}
                                     d="M6 18L18 6M6 6l12 12"
                                 />
-                            </svg>
-                        </button>
-                        
-                        <h1 className='font-semibold text-4xl p-5'>{station.name}</h1>
-                        <main className='w-[95%] h-[90%] flex justify-around items-center flex-col p-7'>
-                            <section className='text-4xl flex items-center gap-4'>
+                            </svg>   
+                        </button>    
+                        <main className='w-[95%] h-[90%] flex gap-4 items-center flex-col p-6 text-4xl z-[2] overflow-y-auto mt-3'>
+                            <div className='bg-[var(--cardblack)] rounded-3xl w-full'>
+                                <h1 className='font-semibold text-4xl p-7  '>{station.name}</h1>
+                                
+                            </div>
+                            <section className='bg-[var(--cardblack)]  text-2xl flex flex-col items-center gap-4 h-fit w-full justify-center p-7 rounded-3xl' onClick={(e) => e.currentTarget.nextElementSibling.classList.toggle('hidden')} >
+                                Dostępne porty ładowania:
+                            <div className='flex items-center gap-4 text-4xl'>
                                 <img src="/EV-charger.png" alt="EV charger port" className='w-20 h-20'/>
-                                <div className="flex items-center gap-2">
-                                    Ports {station.ports?.filter(port => port.status === 'available').length || 0}/{station.ports?.length || 0}
-                                    <button 
-                                        onClick={refreshStations}
-                                        className="p-2 rounded-full hover:bg-gray-700 transition-colors"
-                                        disabled={isRefreshing}
-                                    >
-                                        <svg 
-                                            className={`w-6 h-6 ${isRefreshing ? 'animate-spin' : ''}`} 
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path 
-                                                strokeLinecap="round" 
-                                                strokeLinejoin="round" 
-                                                strokeWidth={2} 
-                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-                                            />
-                                        </svg>
-                                    </button>
+                                <div className="flex items-center gap-1 text-4xl">  
+                                                                      
+                                         {ports.filter(port => port.station_id === station. id && port.status === 'wolny').length}/{ports.filter(port => port.station_id === station. id).length}                                 
                                 </div>
+                            </div>    
+                                    
                             </section>
-                            <section className='flex flex-col gap-4'>
-                                {station.ports && station.ports.length > 0 ? (
-                                    station.ports.map((port, index) => (
-                                        <div key={port.id} className='flex items-center gap-4 text-xl'>
-                                            <div className={`w-3 h-3 rounded-full ${
-                                                port.status === 'available' ? 'bg-green-500' : 'bg-red-500'
-                                            }`}></div>
-                                            <span>Port {index + 1}: {port.power_kW}kW ({port.status})</span>
+                            <section className='flex flex-col gap-4  animate-display-from-top z-[1] bg-[var(--cardblack)] rounded-3xl p-7 hidden]'>
+                                {ports.filter(port => port.station_id === station.id).map((port,index) => (
+                                    <div key={port.id} className='flex items-center gap-4 text-xl '>
+                                        <div className={`w-3 h-3 rounded-full ${
+                                            port.status === 'wolny' ? 'bg-green-500' : 
+                                            port.status === 'nieczynny' ? 'bg-red-500' : 
+                                            'bg-[var(--yellow)]'
+                                        }`}>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="text-gray-400">No ports available</div>
-                                )}
+                                        <div>Port {index + 1}: {port.power_kW}kW ({port.status})</div>
+                                        
+                                    </div>
+                                ))}
                             </section>
                         </main>
                     </div>

@@ -6,7 +6,6 @@ import { UserContent } from "@/components/auth/UserContent";
 import { AdminContent } from "@/components/auth/AdminContent";
 import { GuestContent } from "@/components/auth/GuestContent";
 import { Button } from "@/components/ui/button";
-;
 import ClientMap from "@/components/ClientMap";
 
 const bebasNeue = Bebas_Neue({

@@ -122,3 +122,53 @@ body {
 .leaflet-control {
   pointer-events: auto !important;
 }
+
+.leaflet-control-zoom-in, .leaflet-control-zoom-out  {
+  background-color: var(--background) !important;
+  color: #fff !important;
+  border: none !important;
+  font-size: 2rem !important;
+  cursor: pointer !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.5) !important;
+  transition: background-color 0.3s !important;
+  z-index: 1 !important;
+  margin: 0.25rem !important;
+}
+.leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+  background-color: var(--darkeryellow) !important;
+}
+
+.leaflet-touch .leaflet-bar {
+  border: none !important;
+}
+
+
+
+
+.css-quhxjy-MuiInputBase-root-MuiOutlinedInput-root {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.4375em;
+  letter-spacing: 0.00938em;
+  color: white !important;
+  box-sizing: border-box;
+  position: relative;
+  cursor: text;
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  position: relative;
+  border-radius: 1rem !important;
+}
+
+
