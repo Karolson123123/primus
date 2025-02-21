@@ -68,8 +68,8 @@ export default function Home() {
         </main>
                     
 
-        <section>
-          <h1 className={`${bebasNeue.className} text-5xl text-center my-4`}>NASZE PUNKTY ŁADOWANIA</h1>
+        <section className="text-center">
+          <a href="/stations"className={`${bebasNeue.className} text-5xl text-center my-4`}>NASZE PUNKTY ŁADOWANIA</a>
         </section>
         <ClientMap/>
     </>

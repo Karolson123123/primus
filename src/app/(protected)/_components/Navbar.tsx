@@ -40,7 +40,18 @@ export const Navbar = () => {
                 > 
                     <Link href="/settings">Settings</Link>
                 </Button>
-
+                <Button 
+                    asChild
+                    variant={pathname === "/vehicles" ? "default" : "outline"}
+                > 
+                    <Link href="/vehicles">Pojazdy</Link>
+                </Button>
+                <Button 
+                    asChild
+                    variant={pathname === "/charging-sessions" ? "default" : "outline"}
+                > 
+                    <Link href="/charging-sessions">Poprzednie sesje</Link>
+                </Button>
             </div>
             <UserButton/>
         </nav>

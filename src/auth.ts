@@ -6,11 +6,23 @@ import NextAuth, { type DefaultSession } from "next-auth"
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
 import { getAccountByUserId } from "./data/account";
 
+interface Vehicle {
+    id: number;
+    license_plate: string;
+    brand: string;
+    battery_capacity_kWh: number;
+    battery_condition: number;
+    max_charging_powerkWh: number;
+    created_at: string;
+    user_id: number;
+}
+
 
 export type ExtendedUser = DefaultSession["user"] & {
     role: "ADMIN" | "USER",
     isTwoFactorEnabled: boolean,
-    isOAuth: boolean,
+    isOAuth: boolean, 
+    vehicles: Vehicle[]
 }
 
 declare module "next-auth" {
@@ -93,12 +105,15 @@ export const {
             const existingAccount = await getAccountByUserId(
                 existingUser.id
             )
+            
 
             token.isOAuth = !!existingAccount;
             token.name = existingUser.name;
             token.email = existingUser.email
             token.role = existingUser.role;
             token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+
+
 
             return token;
         }

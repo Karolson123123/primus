@@ -43,13 +43,13 @@ export const UserButton = () => {
                     <DropdownMenuContent className="bg-[var(--black)] border-none mt-5 flex flex-col items-center justify-center p-3 gap-3" >
                         <Button>
                             <DropdownMenuItem>
-                                <Link href="/client">Ustawienia konta</Link>
+                            <Link href="/client">Ustawienia konta</Link>
                             </DropdownMenuItem>
                         </Button>
                         <hr className="text-[var(--yellow)] h-1 w-20"/>
                         <Button>
                             <DropdownMenuItem>
-                                Pojazdy
+                            <Link href="/vehicles">Pojazdy</Link>
                             </DropdownMenuItem>
                         </Button>
                         <hr className="text-[var(--yellow)] h-1 w-20"/>

@@ -18,6 +18,9 @@ model User {
   isTwoFactorEnabled    Boolean                @default(false)
   isOAuth               Account[]
   twoFactorConfirmation TwoFactorConfirmation?
+  charging_sessions     charging_sessions[]
+  payments              payments[]
+  vehicles              vehicles[]
 }
 
 model Account {
@@ -77,38 +80,38 @@ model alembic_version {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model charging_ports {
-  id                BigInt              @id
+  id                BigInt              @id @default(autoincrement())
   station_id        BigInt
   power_kW          BigInt
   status            String              @db.VarChar(255)
-  last_service_date DateTime            @db.Date
-  created_at        DateTime            @db.Date
+  last_service_date DateTime?           @db.Date
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
   charging_stations charging_stations   @relation(fields: [station_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_ports_station_id_foreign")
   charging_sessions charging_sessions[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model charging_sessions {
-  id              BigInt         @id
-  user_id         BigInt
+  id              BigInt         @id @default(autoincrement())
+  user_id         String
   vehicle_id      BigInt
   port_id         BigInt
   start_time      DateTime       @db.Date
-  end_time        DateTime       @db.Date
+  end_time        DateTime?      @db.Date
   energy_used_kWh Float
   total_cost      Float
   status          String         @db.VarChar(255)
   charging_ports  charging_ports @relation(fields: [port_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_port_id_foreign")
-  users           users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_user_id_foreign")
+  users           User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_user_id_foreign")
   vehicles        vehicles       @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_vehicle_id_foreign")
   payments        payments[]
 }
 
 model charging_stations {
-  id             BigInt           @id
+  id             BigInt           @id @default(autoincrement())
   name           String           @db.VarChar(255)
-  lattitude      Float
-  longitide      Float
+  latitude       Float
+  longitude      Float
   created_at     DateTime         @db.Date
   charging_ports charging_ports[]
 }
@@ -119,13 +122,13 @@ model discounts {
   description          String   @db.VarChar(255)
   discround_percentage BigInt
   expiration_date      DateTime @db.Date
-  created_at           DateTime @db.Date
+  created_at           DateTime @db.Timestamptz(6)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model payments {
-  id                BigInt            @id
-  user_id           BigInt
+  id                BigInt            @id @default(autoincrement())
+  user_id           String
   session_id        BigInt
   amount            Float
   status            String            @db.VarChar(255)
@@ -133,42 +136,28 @@ model payments {
   payment_method    String            @db.VarChar(255)
   created_at        DateTime          @db.Date
   charging_sessions charging_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_session_id_foreign")
-  users             users             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_user_id_foreign")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model users {
-  id                        BigInt              @id
-  email                     String              @db.VarChar(255)
-  password                  String              @db.VarChar(255)
-  role                      String              @db.VarChar(255)
-  phone_number              Int                 @db.SmallInt
-  two_factor_enabled        Boolean
-  two_factor_secret         String              @db.VarChar(255)
-  first_name                String              @db.VarChar(255)
-  last_name                 String              @db.VarChar(255)
-  recently_updated_password Boolean
-  recently_                 BigInt
-  created_at                DateTime            @db.Date
-  charging_sessions         charging_sessions[]
-  payments                  payments[]
-  vehicles                  vehicles[]
+  users             User              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_user_id_foreign")
 }
 
 model vehicles {
-  id                   BigInt              @id
-  user_id              BigInt
-  license_plate        String              @db.VarChar(255)
-  brand                String              @db.VarChar(255)
-  battery_capacity_kWh Int
-  bettery_condition    Float
-  max_charging_powerkW BigInt
-  created_at           DateTime            @db.Date
-  charging_sessions    charging_sessions[]
-  users                users               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vehicles_user_id_foreign")
+  id                    BigInt              @id @default(autoincrement())
+  user_id               String
+  license_plate         String              @unique(map: "vehicles_license_plate_unique") @db.VarChar(255)
+  brand                 String              @db.VarChar(255)
+  battery_capacity_kWh  Int?
+  battery_condition     Float?
+  max_charging_powerkWh BigInt?
+  created_at            DateTime            @default(now()) @db.Timestamptz(6)
+  charging_sessions     charging_sessions[]
+  users                 User                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vehicles_user_id_foreign")
 }
 
 enum UserRole {
+  ADMIN
+  USER
+}
+
+enum user_role_enum {
   ADMIN
   USER
 }
