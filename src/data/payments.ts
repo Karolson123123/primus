@@ -1,3 +1,7 @@
+"use server";
+
+import { auth } from "@/auth";
+
 interface Payment {
     id: number;
     name: string;
@@ -6,23 +10,50 @@ interface Payment {
     created_at: string;
 }
 
-export const getStationsInfo = async (): Promise<Payment[] | null> => {
+export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
     try {
-        const response = await fetch('http://localhost:8000/payments', {
+        const session = await auth();
+        
+        if (!session?.user?.apiToken) {
+            console.error("No authentication token available");
+            return null;
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        
+        const response = await fetch(`${baseUrl}/payments`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${session.user.apiToken}`
             },
-            credentials: 'include'
+            cache: 'no-store'
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch stations');
+            const errorData = await response.json().catch(() => ({
+                error: "Failed to parse error response"
+            }));
+            console.error("API Error:", {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorData
+            });
+            return null;
         }
-        return await response.json();
+
+        const data = await response.json();
+        console.log("Successfully fetched payments:", {
+            count: data?.length || 0
+        });
+        
+        return data;
     } catch (error) {
-        console.error("Error fetching stations:", error);
+        console.error("Error in getPaymentsInfo:", {
+            name: error?.name,
+            message: error instanceof Error ? error.message : "Unknown error",
+            error: JSON.stringify(error, null, 2)
+        });
         return null;
     }
 }

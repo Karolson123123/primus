@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getVehicles } from '@/data/vehicles'
 import { VehiclesInfo } from '@/components/VehiclesInfo';
+import { VehicleForm } from '@/components/VehicleForm';
 
 interface Vehicle {
     id: number;
@@ -48,6 +49,8 @@ export default function VehiclesPage() {
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Vehicle Management</h1>
       <VehiclesInfo vehicles={vehicles} label='Vehicle Information' />
+      <VehicleForm/>
     </div>
+
   )
 }

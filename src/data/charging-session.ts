@@ -1,3 +1,7 @@
+"use server";
+
+import { auth } from "@/auth";
+
 interface ChargingSession {
     id: number;
     name: string;
@@ -14,11 +18,20 @@ interface ChargingSession {
 
 export const getChargingSessionsInfo = async (): Promise<ChargingSession[] | null> => {
     try {
-        const response = await fetch('http://localhost:8000/sessions', {
+        const session = await auth();
+        
+        if (!session?.user?.apiToken) {
+            console.error("No authentication token available");
+            return null;
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        
+        const response = await fetch(`${baseUrl}/sessions`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${session.user.apiToken}`
             },
             credentials: 'include'
         });

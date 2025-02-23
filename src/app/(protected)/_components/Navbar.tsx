@@ -52,6 +52,12 @@ export const Navbar = () => {
                 > 
                     <Link href="/charging-sessions">Poprzednie sesje</Link>
                 </Button>
+                <Button 
+                    asChild
+                    variant={pathname === "/payments" ? "default" : "outline"}
+                > 
+                    <Link href="/payments">Płatności</Link>
+                </Button>
             </div>
             <UserButton/>
         </nav>
