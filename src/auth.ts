@@ -106,113 +106,64 @@ export const {
         },
         
         // Update the JWT callback to handle token refresh and validation
-        async jwt({ token, user }) {
-            // Initial token creation
+        async jwt({ token, user, account, trigger }) {
+            // Debug logging
+            console.log("JWT Callback - Starting state:", {
+                trigger,
+                hasToken: !!token,
+                hasUser: !!user,
+                hasAccount: !!account,
+                tokenIsOAuth: token?.isOAuth,
+                accountProvider: account?.provider,
+                provider: token?.provider
+            });
+
+            // Initial sign in with user data
             if (user) {
-                try {
-                    const existingUser = await getUserById(user.id);
-                    const apiToken = await generateJWT(user.id);
-                    
-                    console.log("JWT Callback - New token creation:", {
-                        userId: user.id,
-                        role: existingUser?.role || "USER",
-                        hasApiToken: !!apiToken
-                    });
+                const existingUser = await getUserById(user.id);
+                if (!existingUser) return token;
 
-                    return {
-                        ...token,
-                        id: user.id,
-                        email: user.email,
-                        name: user.name,
-                        role: existingUser?.role || "USER",
-                        apiToken,
-                        sub: user.id,
-                        tokenCreated: Date.now(),
-                        isTwoFactorEnabled: existingUser?.isTwoFactorEnabled,
-                        isOAuth: !!user.email
-                    };
-                } catch (error) {
-                    console.error("JWT Callback - Error:", error);
-                    return token;
-                }
+                const apiToken = await generateJWT(user.id);
+                const provider = account?.provider || 'credentials';
+                
+                return {
+                    ...token,
+                    isOAuth: provider !== 'credentials',  // Simplify OAuth check
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    role: existingUser.role,
+                    isTwoFactorEnabled: existingUser.isTwoFactorEnabled,
+                    apiToken,
+                    sub: user.id,
+                    tokenCreated: Date.now(),
+                    provider
+                };
             }
 
-            // Handle missing apiToken or role in existing session
-            if (!token.apiToken || !token.role) {
-                try {
-                    const existingUser = await getUserById(token.sub);
-                    const apiToken = await generateJWT(token.sub);
-                    
-                    console.log("JWT Callback - Restoring missing data:", {
-                        userId: token.sub,
-                        restoredRole: existingUser?.role || "USER",
-                        hasNewApiToken: !!apiToken
-                    });
-
-                    return {
-                        ...token,
-                        role: existingUser?.role || "USER",
-                        apiToken,
-                        tokenCreated: Date.now()
-                    };
-                } catch (error) {
-                    console.error("JWT Callback - Restoration error:", error);
-                }
-            }
-
-            // Regular token refresh check
-            const shouldRefresh = token.tokenCreated && 
-                Date.now() - token.tokenCreated > 23 * 60 * 60 * 1000;
-
-            if (shouldRefresh && token.sub) {
-                try {
-                    const existingUser = await getUserById(token.sub);
-                    const apiToken = await generateJWT(token.sub);
-                    
-                    console.log("JWT Callback - Token refresh:", {
-                        userId: token.sub,
-                        currentRole: token.role,
-                        hasNewApiToken: !!apiToken
-                    });
-
-                    return {
-                        ...token,
-                        role: existingUser?.role || token.role || "USER",
-                        apiToken,
-                        tokenCreated: Date.now()
-                    };
-                } catch (error) {
-                    console.error("JWT Callback - Refresh error:", error);
-                }
-            }
-
-            return token;
+            // For all subsequent requests
+            return {
+                ...token,
+                isOAuth: token.provider !== 'credentials',  // Ensure isOAuth matches provider
+                provider: token.provider || 'credentials'    // Ensure provider is always set
+            };
         },
 
         async session({ token, session }) {
-            console.log("Session Callback - Token received:", JSON.stringify(token));
-            
             if (session.user) {
                 session.user.id = token.sub as string;
                 session.user.role = token.role as "ADMIN" | "USER";
                 session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean;
                 session.user.name = token.name;
                 session.user.email = token.email;
-                session.user.isOAuth = token.isOAuth as boolean;
+                // Simplify isOAuth logic to directly use token provider
+                session.user.isOAuth = token.provider !== 'credentials';
                 session.user.apiToken = token.apiToken as string;
 
-                // Add debug logging for token validation
-                console.log("Session Callback - Token validation:", {
+                console.log("Session Callback - Final state:", {
                     userId: session.user.id,
-                    tokenPresent: !!session.user.apiToken,
-                    tokenStart: session.user.apiToken?.substring(0, 20) + '...',
-                    timestamp: new Date().toISOString()
-                });
-
-                console.log("Session Callback - Updated user data:", {
-                    id: session.user.id,
-                    email: session.user.email,
-                    apiToken: session.user.apiToken ? "present" : "missing"
+                    provider: token.provider || 'credentials',
+                    isOAuth: session.user.isOAuth,
+                    tokenIsOAuth: token.isOAuth
                 });
             }
 
