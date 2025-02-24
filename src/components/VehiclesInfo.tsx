@@ -1,10 +1,11 @@
 "use client"
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "./ui/badge";
 import { getVehicles } from "@/data/vehicles";
-import { useEffect, useState } from "react";
-
+import { useEffect, useState as useReactState } from "react";
+import Image from "next/image";
 interface Vehicle {
     id: number;
     license_plate: string;
@@ -20,6 +21,76 @@ interface VehiclesInfoProps {
     label: string;
     isLoading?: boolean;
 }
+
+const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
+  const [showDetails, setShowDetails] = useState(false);
+
+  const toggleDetails = () => setShowDetails((prev) => !prev);
+
+  return (
+    <div
+      onClick={toggleDetails}
+      className="cursor-pointer rounded-lg border p-4 space-y-2"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          {/* Car image placeholder */}
+          <Image
+            src={'car.svg'}
+            alt="Car"
+            width={48}
+            height={48}
+            className=""
+          />
+          <div>
+            <p className="text-xl font-bold text-white">{vehicle.brand}</p>
+            <p className="text-sm text-gray-300">{vehicle.license_plate}</p>
+          </div>
+        </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className={`w-6 h-6 transform transition-transform duration-150 ${
+            showDetails ? "rotate-180" : ""
+          }`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="white"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+      <div
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          showDetails ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="mt-2 space-y-2">
+          <div className="flex justify-between items-center">
+            <p className="text-md font-medium text-white">Pojemność baterii</p>
+            <p className="text-md text-white p-1 bg-gray-700 rounded-md">
+              {vehicle.battery_capacity_kWh} kWh
+            </p>
+          </div>
+          <div className="flex justify-between items-center">
+            <p className="text-md font-medium text-white">Stan baterii</p>
+            <Badge
+              variant={
+                vehicle.battery_condition > 0.7 ? "success" : "destructive"
+              }
+            >
+              {Math.round(vehicle.battery_condition * 100)}%
+            </Badge>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const VehiclesInfo = ({
     vehicles,
@@ -53,40 +124,7 @@ export const VehiclesInfo = ({
             </CardHeader>
             <CardContent className="space-y-4">
                 {vehicles?.map((vehicle) => (
-                    <div key={vehicle.id} className="rounded-lg border p-4 space-y-3">
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Numer rejestracyjny
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {vehicle.license_plate}
-                            </p>
-                        </div>
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Marka
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {vehicle.brand}
-                            </p>
-                        </div>
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Pojemność baterii
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {vehicle.battery_capacity_kWh} kWh
-                            </p>
-                        </div>
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Stan baterii
-                            </p>
-                            <Badge variant={vehicle.battery_condition > 0.7 ? "success" : "destructive"}>
-                                {Math.round(vehicle.battery_condition * 100)}%
-                            </Badge>
-                        </div>
-                    </div>
+                    <VehicleCard key={vehicle.id} vehicle={vehicle} />
                 ))}
             </CardContent>
         </Card>
@@ -94,8 +132,8 @@ export const VehiclesInfo = ({
 };
 
 const VehiclesPage = () => {
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [vehicles, setVehicles] = useReactState<Vehicle[]>([]);
+    const [isLoading, setIsLoading] = useReactState(true);
 
     useEffect(() => {
         const fetchVehicles = async () => {

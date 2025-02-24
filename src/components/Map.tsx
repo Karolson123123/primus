@@ -109,9 +109,10 @@ function LocationUpdater({ position }: { position: LatLngTuple }) {
 export default function Map() {
     const [stations, setStations] = useState<Station[]>([]);
     const [ports, setPorts] = useState<Port[]>([]);
-
+    const [cityNames, setCityNames] = useState<Record<number, string>>({}); // new state for city names
     const [activeMarker, setActiveMarker] = useState<number | null>(null);
 
+    // existing code for fetching ports and stations
     useEffect(() => {
         const fetchPorts = async () => {
             try {
@@ -141,7 +142,32 @@ export default function Map() {
         };
         fetchStations();
     }, []);
-    
+
+    // New effect: for each station fetch the city name from reverse geocoding
+    useEffect(() => {
+        if (stations.length > 0) {
+            const fetchCities = async () => {
+                const newMapping: Record<number, string> = {};
+                await Promise.all(
+                    stations.map(async (station) => {
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${station.latitude}&lon=${station.longitude}`);
+                            const data = await response.json();
+                            // Try different address properties in case the city field is missing.
+                            const city = data.address.city || data.address.town || data.address.village || '';
+                            newMapping[station.id] = city;
+                        } catch (error) {
+                            console.error('Error fetching city for station:', station.id, error);
+                            newMapping[station.id] = '';
+                        }
+                    })
+                );
+                setCityNames(newMapping);
+            };
+            fetchCities();
+        }
+    }, [stations]);
+
     const location = useGeoLocation();
     
 
@@ -158,7 +184,7 @@ export default function Map() {
                 center={center}
                 zoom={13}
                 scrollWheelZoom={true}
-                style={{ height: "870px", width: "100%", zIndex: "0" }}
+                style={{ height: "800px", width: "100%", zIndex: "0" }}
             >
                 <LocationUpdater position={center} />
                 <TileLayer
@@ -243,8 +269,12 @@ export default function Map() {
                         </button>    
                         <main className='w-[95%] h-[90%] flex gap-4 items-center flex-col p-6 text-4xl z-[2] overflow-y-auto mt-3'>
                             <div className='bg-[var(--cardblack)] rounded-3xl w-full'>
-                                <h1 className='font-semibold text-4xl p-7  '>{station.name}</h1>
-                                
+                                {/* Updated station name to include the city name if available */}
+                                <h1 className='font-semibold text-4xl p-7'>
+                                    
+                                    {cityNames[station.id] && `${cityNames[station.id]}`}, <br />
+                                    {station.name}{' '}
+                                </h1>
                             </div>
                             <section className='bg-[var(--cardblack)]  text-2xl flex flex-col items-center gap-4 h-fit w-full justify-center p-7 rounded-3xl' onClick={(e) => e.currentTarget.nextElementSibling.classList.toggle('hidden')} >
                                 Dostępne porty ładowania:

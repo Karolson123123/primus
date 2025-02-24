@@ -5,8 +5,6 @@ import { auth } from "@/auth";
 interface ChargingSession {
     id: number;
     name: string;
-    latitude: number;
-    longitude: number;
     created_at: string;
     vehicle_id: number;
     start_time: string;
@@ -14,6 +12,7 @@ interface ChargingSession {
     energy_used_kWh: number;
     total_cost: number;
     status: string;
+    port_id: string;
 }
 
 export const getChargingSessionsInfo = async (): Promise<ChargingSession[] | null> => {

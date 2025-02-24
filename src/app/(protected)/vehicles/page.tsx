@@ -2,23 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { getVehicles } from '@/data/vehicles'
-import { VehiclesInfo } from '@/components/VehiclesInfo';
-import { VehicleForm } from '@/components/VehicleForm';
+import { VehiclesInfo } from '@/components/VehiclesInfo'
+import { VehicleForm } from '@/components/VehicleForm'
+import { Button } from '@/components/ui/button'
 
 interface Vehicle {
-    id: number;
-    license_plate: string;
-    brand: string;
-    battery_capacity_kWh: number;
-    battery_condition: number;
-    max_charging_powerkWh: number;
-    created_at: string;
+  id: number;
+  license_plate: string;
+  brand: string;
+  battery_capacity_kWh: number;
+  battery_condition: number;
+  max_charging_powerkWh: number;
+  created_at: string;
 }
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -46,11 +48,35 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Vehicle Management</h1>
-      <VehiclesInfo vehicles={vehicles} label='Vehicle Information' />
-      <VehicleForm/>
-    </div>
-
+    <>
+      <style jsx global>{`
+        /* Apply yellow border for all elements except those in the navbar */
+        *:not(.navbar):not(.navbar *) {
+          border-color: var(--yellow) !important;
+        }
+      `}</style>
+      <div className="container mx-auto py-6">
+        <div className='navbar flex justify-between items-center w-[97%]'>
+          <h1 className="text-2xl font-bold mb-6">Vehicle Management</h1>
+          <Button
+            onClick={() => setShowForm(prev => !prev)}
+            className={`rounded-full bg-[var(--yellow)] h-12 w-12 flex items-center justify-center transform transition-transform duration-300 z-[10000] ${showForm ? 'rotate-45' : ''}`}
+            aria-label="Toggle Vehicle Form"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="w-12 h-12" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="black"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </Button>
+        </div>
+        <VehiclesInfo vehicles={vehicles} label='Vehicle Information' />
+        {showForm && <VehicleForm />}
+      </div>
+    </>
   )
 }

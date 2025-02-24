@@ -65,71 +65,76 @@ export function VehicleForm() {
     };
 
     return (
-        <div className='bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg mt-4 w-[40%] text-white'>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium">
-                        License Plate *
-                    </label>
-                    <Input
-                        type="text"
-                        value={formData.license_plate}
-                        onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
-                        required
-                        placeholder="Enter license plate"
-                        className="mt-1 block w-[90%] rounded-md border-gray-300 shadow-sm"
-                        disabled={isSubmitting}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium">
-                        Brand *
-                    </label>
-                    <Input
-                        type="text"
-                        value={formData.brand}
-                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                        required
-                        placeholder="Enter brand"
-                        className="mt-1 block w-[90%] rounded-md border-gray-300 shadow-sm"
-                        disabled={isSubmitting}
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium">
-                        Battery Capacity (kWh) *
-                    </label>
-                    <Input
-                        type="number"
-                        value={formData.battery_capacity_kWh}
-                        onChange={(e) => setFormData({ 
-                            ...formData, 
-                            battery_capacity_kWh: parseFloat(e.target.value) 
-                        })}
-                        required
-                        min="0"
-                        step="0.1"
-                        placeholder="Enter battery capacity"
-                        className="mt-1 block w-[90%] rounded-md border-gray-300 shadow-sm"
-                        disabled={isSubmitting}
-                    />
-                </div>
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50">
+            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-[30%] text-white">
+            <h2 className="text-xl font-semibold mb-4">Create a New Vehicle</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium">
+                            License Plate *
+                        </label>
+                        <Input
+                            type="text"
+                            value={formData.license_plate}
+                            onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
+                            required
+                            placeholder="Enter license plate"
+                            className="mt-1 block  rounded-er-gray-300 shadow-sm"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">
+                            Brand *
+                        </label>
+                        <Input
+                            type="text"
+                            value={formData.brand}
+                            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                            required
+                            placeholder="Enter brand"
+                            className="mt-1 block  rounded-md border-gray-300 shadow-sm"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">
+                            Battery Capacity (kWh) *
+                        </label>
+                        <Input
+                            type="number"
+                            value={formData.battery_capacity_kWh}
+                            onChange={(e) =>
+                                setFormData({ 
+                                    ...formData, 
+                                    battery_capacity_kWh: parseFloat(e.target.value) 
+                                })
+                            }
+                            required
+                            min="0"
+                            step="0.1"
+                            placeholder="Enter battery capacity"
+                            className="mt-1 block  rounded-md border-gray-300 shadow-sm"
+                            disabled={isSubmitting}
+                        />
+                    </div>
 
-                {error && (
-                    <div className="text-red-500 text-sm">{error}</div>
-                )}
-                {success && (
-                    <div className="text-green-500 text-sm">Vehicle created successfully!</div>
-                )}
+                    {error && (
+                        <div className="text-red-500 text-sm">{error}</div>
+                    )}
+                    {success && (
+                        <div className="text-green-500 text-sm">Vehicle created successfully!</div>
+                    )}
 
-                <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="w-full"
-                >
-                    {isSubmitting ? 'Creating...' : 'Create Vehicle'}
-                </Button>
-            </form>
+                    <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="w-full"
+                    >
+                        {isSubmitting ? 'Creating...' : 'Create Vehicle'}
+                    </Button>
+                </form>
+            </div>
         </div>
     );
 }
