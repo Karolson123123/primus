@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@/components/auth/UserButton";
 import Logo from "@/components/Logo";
 
+
 export const Navbar = () => {
     const pathname = usePathname();
     
@@ -26,7 +27,7 @@ export const Navbar = () => {
                 > 
                     <Link href="/client">Client</Link>
                 </Button>
-
+                
                 <Button 
                     asChild
                     variant={pathname === "/admin" ? "default" : "outline"}
@@ -57,6 +58,24 @@ export const Navbar = () => {
                     variant={pathname === "/payments" ? "default" : "outline"}
                 > 
                     <Link href="/payments">Płatności</Link>
+                </Button>
+                <Button 
+                    asChild
+                    variant={pathname === "/discounts" ? "default" : "outline"}
+                > 
+                    <Link href="/discounts">Rabaty</Link>
+                </Button>
+                <Button 
+                    asChild
+                    variant={pathname === "/charging" ? "default" : "outline"}
+                > 
+                    <Link href="/charging">Ładowanie</Link>
+                </Button>
+                <Button 
+                    asChild
+                    variant={pathname === "/stations" ? "default" : "outline"}
+                > 
+                    <Link href="/stations">Stacje</Link>
                 </Button>
             </div>
             <UserButton/>

@@ -15,7 +15,7 @@ interface ChargingSession {
   vehicle_id: number;
   start_time: string;
   end_time: string | null;
-  energy_used_kWh: number;
+  energy_used_kwh: number;
   total_cost: number;
   status: string;
   port_id: string;
@@ -46,7 +46,7 @@ interface Port {
   id: number;
   status: string;
   created_at: string;
-  power_kW: number;
+  power_kw: number;
   station_id: Station['id'];
 }
 
@@ -54,12 +54,10 @@ const ChargingSessionCard = ({
   session,
   associatedVehicle,
   associatedStation,
-  cityNames,
 }: {
   session: ChargingSession;
   associatedVehicle?: Vehicle;
   associatedStation?: Station;
-  cityNames?: Record<number, string>;
 }) => {
   const [showDetails, setShowDetails] = useState(false);
 
@@ -101,7 +99,7 @@ const ChargingSessionCard = ({
             <div className="flex flex-col items-center">
               
               <p className="text-xl font-bold text-white">
-                {session.total_cost} zł
+                {session.total_cost.toFixed(2)} zł
               </p>
               <p className="text-sm text-gray-300">
                 {new Date(session.start_time).toLocaleDateString()}
@@ -134,13 +132,13 @@ const ChargingSessionCard = ({
           <div className="flex justify-between items-center">
             <p className="text-sm font-medium text-white">Energy Used</p>
             <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
-              {session.energy_used_kWh} kWh
+              {session.energy_used_kwh} kWh
             </p>
           </div>
           <div className="flex justify-between items-center">
             <p className="text-sm font-medium text-white">Total Cost</p>
             <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
-              {session.total_cost} zł
+              {session.total_cost.toFixed(2)} zł
             </p>
           </div>
           <div className="flex justify-between items-center">
@@ -152,9 +150,7 @@ const ChargingSessionCard = ({
           <div className="flex justify-between items-center">
             <p className="text-sm font-medium text-white">Location</p>
             <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
-              {associatedStation && cityNames
-                ? `${cityNames[associatedStation.id]}`
-                : "N/A"}
+              {associatedStation ? associatedStation.name : "N/A"}
             </p>
           </div>
         </CardContent>
@@ -171,7 +167,6 @@ export const ChargingSessionInfo = ({
   const [ports, setPorts] = useState<Port[]>([]);
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [cityNames, setCityNames] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -233,37 +228,6 @@ export const ChargingSessionInfo = ({
           fetchStations();
       }, []);
 
-  // New effect: fetch city name for each station using reverse geocoding (Nominatim)
-  useEffect(() => {
-    const fetchCityNames = async () => {
-      const mapping: Record<number, string> = {};
-      await Promise.all(
-        stations.map(async (station) => {
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${station.latitude}&lon=${station.longitude}`
-            );
-            const data = await response.json();
-            // Check several properties for the city (fallback to station.name if not found)
-            const city =
-              data.address?.city ||
-              data.address?.town ||
-              data.address?.village ||
-              station.name;
-            mapping[station.id] = city;
-          } catch (error) {
-            console.error("Error reverse geocoding station", station.id, error);
-            mapping[station.id] = station.name;
-          }
-        })
-      );
-      setCityNames(mapping);
-    };
-
-    if (stations.length) {
-      fetchCityNames();
-    }
-  }, [stations]);
 
   if (isLoading) {
     return (
@@ -312,7 +276,6 @@ export const ChargingSessionInfo = ({
                 session={session}
                 associatedVehicle={associatedVehicle}
                 associatedStation={associatedStation}
-                cityNames={cityNames} // pass cityNames down as prop if needed
               />
             );
           })}

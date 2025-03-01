@@ -20,30 +20,24 @@ interface Vehicle {
 
 
 const generateJWT = async (userId: string) => {
-    console.log("GenerateJWT - Starting for user:", userId);
-    
     if (!process.env.JWT_SECRET) {
-        console.error("GenerateJWT - Missing JWT_SECRET");
         throw new Error("JWT_SECRET is not configured");
     }
     
     try {
         const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-        // Add more claims to the token
         const token = await new SignJWT({
             sub: userId,
             iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
             type: 'access_token',
-            jti: crypto.randomUUID() // Add unique identifier
+            jti: crypto.randomUUID()
         })
         .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
         .sign(secret);
         
-        console.log("GenerateJWT - Token generated with claims for user:", userId);
         return token;
     } catch (error) {
-        console.error("GenerateJWT - Error:", error);
         throw error;
     }
 };
@@ -105,20 +99,7 @@ export const {
             return true;  
         },
         
-        // Update the JWT callback to handle token refresh and validation
         async jwt({ token, user, account, trigger }) {
-            // Debug logging
-            console.log("JWT Callback - Starting state:", {
-                trigger,
-                hasToken: !!token,
-                hasUser: !!user,
-                hasAccount: !!account,
-                tokenIsOAuth: token?.isOAuth,
-                accountProvider: account?.provider,
-                provider: token?.provider
-            });
-
-            // Initial sign in with user data
             if (user) {
                 const existingUser = await getUserById(user.id);
                 if (!existingUser) return token;
@@ -128,7 +109,7 @@ export const {
                 
                 return {
                     ...token,
-                    isOAuth: provider !== 'credentials',  // Simplify OAuth check
+                    isOAuth: provider !== 'credentials',
                     name: existingUser.name,
                     email: existingUser.email,
                     role: existingUser.role,
@@ -140,11 +121,10 @@ export const {
                 };
             }
 
-            // For all subsequent requests
             return {
                 ...token,
-                isOAuth: token.provider !== 'credentials',  // Ensure isOAuth matches provider
-                provider: token.provider || 'credentials'    // Ensure provider is always set
+                isOAuth: token.provider !== 'credentials',
+                provider: token.provider || 'credentials'
             };
         },
 
@@ -155,16 +135,8 @@ export const {
                 session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean;
                 session.user.name = token.name;
                 session.user.email = token.email;
-                // Simplify isOAuth logic to directly use token provider
                 session.user.isOAuth = token.provider !== 'credentials';
                 session.user.apiToken = token.apiToken as string;
-
-                console.log("Session Callback - Final state:", {
-                    userId: session.user.id,
-                    provider: token.provider || 'credentials',
-                    isOAuth: session.user.isOAuth,
-                    tokenIsOAuth: token.isOAuth
-                });
             }
 
             return session;
@@ -174,5 +146,4 @@ export const {
     session: {strategy: "jwt"},
     ...authConfig
 });
-
 

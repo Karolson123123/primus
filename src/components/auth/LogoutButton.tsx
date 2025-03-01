@@ -16,7 +16,7 @@ export const LogoutButton = ({
         logout();
         setTimeout(() => {  
           window.location.reload();
-        }, 200);
+        }, 2000);
     };
     
     return (
