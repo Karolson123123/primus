@@ -101,6 +101,7 @@ model charging_sessions {
   energy_used_kwh Float
   total_cost      Float
   status          String         @db.VarChar(255)
+  payment_status   String         @db.VarChar(255)
   charging_ports  charging_ports @relation(fields: [port_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_port_id_foreign")
   users           User           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_user_id_foreign")
   vehicles        vehicles       @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_vehicle_id_foreign")

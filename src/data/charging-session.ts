@@ -36,6 +36,7 @@ export interface ChargingSession {
   energy_used_kwh: number;  // Correct lowercase naming
   total_cost: number;
   status: 'IN_PROGRESS' | 'COMPLETED';
+  payment_status: 'PENDING' | 'COMPLETED' | 'FAILED';  // Add this line
   duration_minutes?: number;
   current_battery_capacity_kw?: number; // Add this field
 }
@@ -44,6 +45,7 @@ export interface SessionUpdate {
   energy_used_kwh: number;
   total_cost: number;
   current_battery_capacity_kw: number;
+  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED';  // Add this line
 }
 
 export const getChargingSessionsInfo = async (): Promise<ChargingSession[] | null> => {
@@ -158,7 +160,8 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
       end_time: null,
       energy_used_kwh: Number(responseData.energy_used_kwh || 0),
       total_cost: Number(payload.total_cost), // Use the cost from payload
-      status: 'IN_PROGRESS'
+      status: 'IN_PROGRESS',
+      payment_status: 'PENDING' // Default to PENDING
     };
 
     // Validate all required fields
@@ -224,7 +227,8 @@ export const stopChargingSession = async (sessionData: ChargingSession): Promise
       end_time: new Date().toISOString(),
       energy_used_kwh: Math.max(0, responseData.energy_used_kwh ?? sessionData.energy_used_kwh),
       total_cost: Math.max(0, responseData.total_cost ?? sessionData.total_cost),
-      status: 'COMPLETED'
+      status: 'COMPLETED',
+      payment_status: 'PENDING' // Default to PENDING
     };
   } catch (error) {
     console.error('Stop charging session failed:', {
@@ -295,7 +299,8 @@ export const updateVehicleCapacityAndStopSession = async (
         energy_used_kwh: actualEnergyUsed,
         total_cost: actualCost,
         current_battery_capacity_kw: newCapacity,
-        status: 'COMPLETED' as const
+        status: 'COMPLETED' as const,
+        payment_status: 'PENDING' // Default to PENDING
       };
 
       console.log('Final session state:', finalSession);
@@ -370,7 +375,8 @@ export async function stopCurrentChargingSession(
       end_time: new Date().toISOString(),
       energy_used_kwh: sessionDetails.energy_used_kwh || 0,
       total_cost: sessionDetails.total_cost || calculateCost(sessionDetails.energy_used_kwh || 0), // Calculate if not present
-      status: 'COMPLETED'
+      status: 'COMPLETED',
+      payment_status: 'PENDING' // Default to PENDING
     };
 
     // Stop the charging session
@@ -403,7 +409,8 @@ export const updateSessionState = async (sessionId: number, updatedData: Session
       energy_used_kwh: Number(updatedData.energy_used_kwh),
       current_battery_capacity_kw: Number(updatedData.current_battery_level || 0),
       total_cost: Number(updatedData.total_cost || 0),
-      update_battery: true
+      update_battery: true,
+      payment_status: updatedData.payment_status // Include payment status
     };
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -450,6 +457,39 @@ export const updateSessionCost = async (
   } catch (error) {
     console.error('Error updating session cost:', error);
     throw error instanceof Error ? error : new Error('Failed to update session cost');
+  }
+};
+
+// Add a new function to update payment status
+export const updatePaymentStatus = async (
+  sessionId: number,
+  paymentStatus: 'PENDING' | 'COMPLETED' | 'FAILED'
+): Promise<ChargingSession> => {
+  try {
+    const session = await auth();
+    if (!session?.user?.apiToken) {
+      throw new Error('No authentication token available');
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    const response = await fetch(`${baseUrl}/sessions/${sessionId}/payment`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.user.apiToken}`
+      },
+      body: JSON.stringify({ payment_status: paymentStatus })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update payment status');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating payment status:', error);
+    throw error instanceof Error ? error : new Error('Failed to update payment status');
   }
 };
 

@@ -432,6 +432,11 @@ export const StationsInfo = ({
 }: StationInfoProps) => {
     const [displayCount, setDisplayCount] = useState(5); // Start with 5 stations
     
+    // Move this inside the component
+    const handleLoadMore = () => {
+        setDisplayCount((prevCount) => Math.min(prevCount + 5, stations.length));
+    };
+
     if (isLoading) {
         return (
             <Card className="bg-[var(--cardblack)] w-[90%]">
@@ -453,11 +458,8 @@ export const StationsInfo = ({
 
     // Get the stations to display based on current displayCount
     const displayedStations = stations.slice(0, displayCount);
-    const hasMore = displayCount < stations.length;
-
-    const handleLoadMore = () => {
-        setDisplayCount(prev => prev + 5);
-    };
+    const remainingCount = stations.length - displayCount;
+    const hasMore = remainingCount > 0;
 
     return (
         <Card className="bg-[var(--cardblack)] w-[90%]">
@@ -476,12 +478,14 @@ export const StationsInfo = ({
                 {hasMore && (
                     <div className="flex justify-center mt-6">
                         <Button 
-                            onClick={handleLoadMore}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleLoadMore();
+                            }}
                             variant="default"
-                            className="bg-[var(--yellow)] hover:bg-yellow-600 text-black px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer"
-                            type="button"
+                            className="bg-[var(--yellow)] hover:bg-yellow-600 text-black px-4 py-2 rounded-lg transition-colors duration-200"
                         >
-                            Load More ({stations.length - displayCount} remaining)
+                            Load More ({remainingCount} remaining)
                         </Button>
                     </div>
                 )}

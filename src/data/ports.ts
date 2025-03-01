@@ -19,17 +19,11 @@ export interface CreatePortData {
 
 export const getPortsInfo = async (): Promise<Port[] | null> => {
     try {
-        const session = await auth();
-        if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
-        }
-
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         const response = await fetch(`${baseUrl}/ports`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.user.apiToken}`
+                'Content-Type': 'application/json'
             }
         });
 

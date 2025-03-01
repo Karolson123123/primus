@@ -7,6 +7,7 @@ import { getChargingSessionsInfo } from "@/data/charging-session";
 import { getVehicles } from "@/data/vehicles";
 import { getPortsInfo } from "@/data/ports";
 import { getStationsInfo } from "@/data/stations";
+import { useRouter } from 'next/navigation';
 
 interface ChargingSession {
   id: number;
@@ -19,6 +20,7 @@ interface ChargingSession {
   total_cost: number;
   status: string;
   port_id: string;
+  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED';
 }
 
 interface ChargingSessionInfoProps {
@@ -50,6 +52,18 @@ interface Port {
   station_id: Station['id'];
 }
 
+const getPaymentStatusColor = (status?: string) => {
+  switch (status) {
+    case 'COMPLETED':
+      return 'bg-green-600';
+    case 'FAILED':
+      return 'bg-red-600';
+    case 'PENDING':
+    default:
+      return 'bg-yellow-600';
+  }
+};
+
 const ChargingSessionCard = ({
   session,
   associatedVehicle,
@@ -60,6 +74,15 @@ const ChargingSessionCard = ({
   associatedStation?: Station;
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const router = useRouter();
+
+  const needsPayment = session.status === 'COMPLETED' && 
+                      (!session.payment_status || session.payment_status === 'PENDING');
+
+  const handlePayment = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card from toggling when clicking payment button
+    router.push(`/payment?sessionId=${session.id}&amount=${session.total_cost}`);
+  };
 
   return (
     <Card
@@ -69,7 +92,15 @@ const ChargingSessionCard = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* Car image and vehicle info */}
+            {/* Add payment status indicator here */}
+            {needsPayment && (
+              <div className="relative">
+                <div className={`w-3 h-3 rounded-full ${getPaymentStatusColor(session.payment_status)} animate-pulse`} />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+              </div>
+            )}
+            
+            {/* Existing car image and vehicle info */}
             <Image
               src="/car.svg"
               alt="Car"
@@ -148,11 +179,30 @@ const ChargingSessionCard = ({
             </p>
           </div>
           <div className="flex justify-between items-center">
+            <p className="text-sm font-medium text-white">Payment Status</p>
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${getPaymentStatusColor(session.payment_status)}`} />
+              <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
+                {session.payment_status || 'PENDING'}
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
             <p className="text-sm font-medium text-white">Location</p>
             <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
               {associatedStation ? associatedStation.name : "N/A"}
             </p>
           </div>
+          {needsPayment && (
+            <div className="pt-4 mt-2 border-t border-[var(--yellow)]">
+              <button
+                onClick={handlePayment}
+                className="w-full py-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-semibold rounded-md transition-colors"
+              >
+                Pay {session.total_cost.toFixed(2)} PLN
+              </button>
+            </div>
+          )}
         </CardContent>
       )}
     </Card>
@@ -280,6 +330,7 @@ export const ChargingSessionInfo = ({
             );
           })}
         </CardContent>
+        
       </Card>
     </div>
   );

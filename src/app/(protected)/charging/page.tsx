@@ -439,25 +439,23 @@ export default function ChargingPage() {
 
     try {
         const energyUsed = Math.max(0, currentCapacityKWh - selectedVehicle.current_battery_capacity_kw);
-        const finalCost = Math.max(0, currentCost); // Use currentCost state
+        const finalCost = Math.max(0, currentCost);
 
-        // Call the server action to stop charging and update port status
         const result = await stopCurrentChargingSession(
             sessionResult.id,
             selectedVehicle.id,
             currentCapacityKWh,
             energyUsed,
-            finalCost // Pass the final cost
+            finalCost
         );
 
         if (result) {
-            // Show success toast
             toast.success("Charging Complete", {
                 description: `Final cost: ${finalCost.toFixed(2)} PLN | Energy used: ${energyUsed.toFixed(2)} kWh`,
-                duration: 5000,
+                duration: 50000,
                 action: {
-                    label: "View Details",
-                    onClick: () => router.push('/charging')
+                    label: "Go to Payment",
+                    onClick: () => router.push(`/payment?sessionId=${sessionResult.id}&amount=${finalCost}`)
                 }
             });
 
@@ -472,34 +470,22 @@ export default function ChargingPage() {
                 setIntervalId(null);
             }
 
-            // Update port status
-            if (selectedPort.id) {
-                let retryCount = 0;
-                const maxRetries = 3;
-                
-                while (retryCount < maxRetries) {
-                    try {
-                        await updatePortStatus(selectedPort.id, 'wolny');
-                        break;
-                    } catch (error) {
-                        console.error(`Failed to update port status (attempt ${retryCount + 1}):`, error);
-                        retryCount++;
-                        if (retryCount === maxRetries) {
-                            toast.error("Failed to update port status", {
-                                description: "The session was stopped but the port status couldn't be updated"
-                            });
-                        }
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
-                }
-            }
+            // Show payment button in UI
+            return (
+                <Button
+                    onClick={() => router.push(`/payment?sessionId=${sessionResult.id}&amount=${finalCost}`)}
+                    className="w-full mt-4 bg-[var(--yellow)] hover:bg-yellow-600 text-black"
+                >
+                    Proceed to Payment
+                </Button>
+            );
         }
     } catch (error) {
         console.error('Failed to stop charging:', error);
         setError(error instanceof Error ? error.message : 'Failed to stop charging');
         
         toast.error("Failed to stop charging", {
-            description: error instanceof Error ? error.message : 'Please try again',
+            description: error instanceof Error ? error.message : 'Please try again'
         });
     } finally {
         setIsSubmitting(false);
@@ -1187,6 +1173,16 @@ useEffect(() => {
               <p className="mt-2 text-yellow-500">
                 {isCharging ? 'Remaining' : 'Estimated'} Time: {Math.floor((isCharging ? remainingTime : estimatedTime * 60) / 60)}:{String((isCharging ? remainingTime : estimatedTime * 60) % 60).padStart(2, '0')}
               </p>
+              
+              {/* Add the payment button here */}
+              {sessionResult && !isCharging && (
+                <Button
+                  onClick={() => router.push(`/payment?sessionId=${sessionResult.id}&amount=${currentCost}`)}
+                  className="w-full mt-4 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black"
+                >
+                  Proceed to Payment
+                </Button>
+              )}
             </div>
           </div>
         )}
