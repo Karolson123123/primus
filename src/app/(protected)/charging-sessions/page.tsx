@@ -13,7 +13,7 @@ interface ChargingSession {
     vehicle_id: number;
     start_time: string;
     end_time: string | null;
-    energy_used_kWh: number;
+    energy_used_kwh: number;
     total_cost: number;
     status: string;
 }

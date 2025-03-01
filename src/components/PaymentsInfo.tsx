@@ -6,9 +6,11 @@ import { getPaymentsInfo } from "@/data/payments";
 
 interface Payment {
     id: number;
+    user_id: string;
     session_id: string;
     amount: number;
-    paymen_method: string;
+    status: string;
+    payment_method: string;
     created_at: string;
 }
 
@@ -49,11 +51,13 @@ export const PaymentsInfo = ({
                 </p>
             </CardHeader>
             <CardContent className="space-y-4">
-                {payments?.map((payment) => (
+                {payments?.map((payment) => { 
+                    const halo = new Date(payment.created_at);
+                    return (
                     <div key={payment.id} className="rounded-lg border p-4 space-y-3">
                         <div className="flex flex-row items-center justify-between">
                             <p className="text-sm font-medium text-white">
-                                Numer rejestracyjny
+                                Id Sesji
                             </p>
                             <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
                                 {payment.session_id}
@@ -61,30 +65,30 @@ export const PaymentsInfo = ({
                         </div>
                         <div className="flex flex-row items-center justify-between">
                             <p className="text-sm font-medium text-white">
-                                Marka
+                                Koszt
                             </p>
                             <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {payment.amount}
+                                {payment.amount} zł
                             </p>
                         </div>
                         <div className="flex flex-row items-center justify-between">
                             <p className="text-sm font-medium text-white">
-                                Pojemność baterii
+                                Metoda płatności
                             </p>
                             <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {payment.paymen_method} kWh
+                                {payment.payment_method}
                             </p>
                         </div>
                         <div className="flex flex-row items-center justify-between">
                             <p className="text-sm font-medium text-white">
-                                Stan baterii
+                                Data transakcji
                             </p>
                             <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {payment.created_at} kWh
+                                {halo.getHours() < 10 ? "0" + halo.getHours() : halo.getHours()}:{halo.getMinutes() < 10 ? "0" + halo.getMinutes() : halo.getMinutes()} {halo.getDate() < 10 ? "0" + halo.getDate() : halo.getDate()}.{halo.getMonth() < 10 ? "0" + halo.getMonth() : halo.getMonth()}.{halo.getFullYear()}
                             </p>
                         </div>
                     </div>
-                ))}
+                )})}
             </CardContent>
         </Card>
     );

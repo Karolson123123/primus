@@ -53,16 +53,16 @@ export default function SearchBox({ stations }) {
                 </div>
             </div>
             <div className="z-[100000] ">
-        <List components="nav" aria-label="main mailbox folders">
+        {/* <List components="nav" aria-label="main mailbox folders">
           {stations.map((station) => (
-            <ListItem button key={station.id}>
+            <ListItem  key={station.id}>
               <ListItemIcon>
                 <Image src={"/basic-marker.png"} alt="marker" width={32} height={32}></Image>
               </ListItemIcon>
               <ListItemText primary={station.name} />
             </ListItem>
           ))}
-        </List>
+        </List> */}
       </div>
         </div>
 

@@ -10,9 +10,10 @@ interface Vehicle {
   id: number;
   license_plate: string;
   brand: string;
-  battery_capacity_kWh: number;
+  battery_capacity_kwh: number;
   battery_condition: number;
-  max_charging_powerkWh: number;
+  current_battery_capacity_kw: number; // Add this field
+  max_charging_powerkwh: number;
   created_at: string;
 }
 

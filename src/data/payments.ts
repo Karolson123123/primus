@@ -49,11 +49,13 @@ export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
         
         return data;
     } catch (error) {
-        console.error("Error in getPaymentsInfo:", {
-            name: error?.name,
-            message: error instanceof Error ? error.message : "Unknown error",
-            error: JSON.stringify(error, null, 2)
-        });
+        if (error instanceof Error) {
+            console.error("Error in getPaymentsInfo:", {
+                name: error.name,
+                message: error instanceof Error ? error.message : "Unknown error",
+                error: JSON.stringify(error, null, 2)
+            });
+        }
         return null;
     }
 }

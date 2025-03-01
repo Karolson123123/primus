@@ -14,16 +14,30 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session  = await auth();
+  const session = await auth();
   return (
     <SessionProvider session={session}>
       <html lang="pl">
         <body className={`antialiased`}>
-          <Toaster theme="dark" toastOptions={{
-            style: {
-              backgroundColor: "var(--yellow)"
-            }
-          }} />
+          <Toaster 
+            theme="dark" 
+            position="top-right"
+            expand={false}
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                backgroundColor: "var(--yellow)",
+              },
+              actionButtonStyle: {
+                backgroundColor: "var(--cardblack)",
+                color: "white",
+              },
+              descriptionStyle: {
+                color: "var(--cardblack)",
+              },
+            }}
+          />
           {children}
         </body>
       </html>

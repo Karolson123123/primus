@@ -82,7 +82,7 @@ model alembic_version {
 model charging_ports {
   id                BigInt              @id @default(autoincrement())
   station_id        BigInt
-  power_kW          BigInt
+  power_kw          BigInt
   status            String              @db.VarChar(255)
   last_service_date DateTime?           @db.Date
   created_at        DateTime            @default(now()) @db.Timestamptz(6)
@@ -98,7 +98,7 @@ model charging_sessions {
   port_id         BigInt
   start_time      DateTime       @db.Date
   end_time        DateTime?      @db.Date
-  energy_used_kWh Float
+  energy_used_kwh Float
   total_cost      Float
   status          String         @db.VarChar(255)
   charging_ports  charging_ports @relation(fields: [port_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "charging_sessions_port_id_foreign")
@@ -112,7 +112,7 @@ model charging_stations {
   name           String           @db.VarChar(255)
   latitude       Float
   longitude      Float
-  created_at     DateTime         @db.Date
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
   charging_ports charging_ports[]
 }
 
@@ -122,7 +122,7 @@ model discounts {
   description          String   @db.VarChar(255)
   discround_percentage BigInt
   expiration_date      DateTime @db.Date
-  created_at           DateTime @db.Timestamptz(6)
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -134,22 +134,23 @@ model payments {
   status            String            @db.VarChar(255)
   transaction_id    BigInt
   payment_method    String            @db.VarChar(255)
-  created_at        DateTime          @db.Date
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
   charging_sessions charging_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_session_id_foreign")
   users             User              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payments_user_id_foreign")
 }
 
 model vehicles {
-  id                    BigInt              @id @default(autoincrement())
-  user_id               String
-  license_plate         String              @unique(map: "vehicles_license_plate_unique") @db.VarChar(255)
-  brand                 String              @db.VarChar(255)
-  battery_capacity_kWh  Int?
-  battery_condition     Float?
-  max_charging_powerkWh BigInt?
-  created_at            DateTime            @default(now()) @db.Timestamptz(6)
-  charging_sessions     charging_sessions[]
-  users                 User                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vehicles_user_id_foreign")
+  id                          BigInt              @id @default(autoincrement())
+  user_id                     String
+  license_plate               String              @unique(map: "vehicles_license_plate_unique") @db.VarChar(255)
+  brand                       String              @db.VarChar(255)
+  battery_capacity_kwh        Int?
+  battery_condition           Float?
+  max_charging_powerkwh       BigInt?
+  created_at                  DateTime            @default(now()) @db.Timestamptz(6)
+  current_battery_capacity_kw Float               @default(0)
+  charging_sessions           charging_sessions[]
+  users                       User                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "vehicles_user_id_foreign")
 }
 
 enum UserRole {
