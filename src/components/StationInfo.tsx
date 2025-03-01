@@ -426,10 +426,12 @@ const StationCard = ({ station }: { station: Station }) => {
 };
 
 export const StationsInfo = ({
-    stations = [], // Provide default empty array
+    stations = [],
     label,
     isLoading = false,
 }: StationInfoProps) => {
+    const [displayCount, setDisplayCount] = useState(5); // Start with 5 stations
+    
     if (isLoading) {
         return (
             <Card className="bg-[var(--cardblack)] w-[90%]">
@@ -449,20 +451,13 @@ export const StationsInfo = ({
         );
     }
 
-    if (!stations || stations.length === 0) {
-        return (
-            <Card className="bg-[var(--cardblack)] w-[90%]">
-                <CardHeader>
-                    <p className="text-2xl font-semibold text-center text-white">
-                        {label}
-                    </p>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-gray-400">No stations found</p>
-                </CardContent>
-            </Card>
-        );
-    }
+    // Get the stations to display based on current displayCount
+    const displayedStations = stations.slice(0, displayCount);
+    const hasMore = displayCount < stations.length;
+
+    const handleLoadMore = () => {
+        setDisplayCount(prev => prev + 5);
+    };
 
     return (
         <Card className="bg-[var(--cardblack)] w-[90%]">
@@ -471,10 +466,25 @@ export const StationsInfo = ({
                     {label}
                 </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-                {stations.map((station) => (
-                    <StationCard key={station.id} station={station} />
-                ))}
+            <CardContent>
+                <div className="space-y-4">
+                    {displayedStations.map((station) => (
+                        <StationCard key={station.id} station={station} />
+                    ))}
+                </div>
+                
+                {hasMore && (
+                    <div className="flex justify-center mt-6">
+                        <Button 
+                            onClick={handleLoadMore}
+                            variant="default"
+                            className="bg-[var(--yellow)] hover:bg-yellow-600 text-black px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer"
+                            type="button"
+                        >
+                            Load More ({stations.length - displayCount} remaining)
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

@@ -4,11 +4,6 @@ import { auth } from "@/auth";
 import { updateVehicleCapacity } from '@/data/vehicles';
 import { updatePortStatus } from "./ports";
 
-const COST_PER_KWH = 1.0; // 1 PLN per kWh
-
-const calculateCost = (energyUsed: number): number => {
-  return Math.max(0, energyUsed * COST_PER_KWH);
-};
 
 export interface Vehicle {
   id: number;
@@ -94,8 +89,8 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
       vehicle_id: Number(sessionData.vehicle_id),
       port_id: Number(sessionData.port_id),
       duration_minutes: Number(sessionData.duration_minutes),
-      energy_used_kwh: 0,
-      total_cost: 0,
+      energy_used_kwh: Number(sessionData.energy_used_kwh || 0),
+      total_cost: Number(sessionData.total_cost), // Use the passed cost directly
       status: 'IN_PROGRESS'
     };
     
@@ -162,7 +157,7 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
       duration_minutes: Number(payload.duration_minutes),
       end_time: null,
       energy_used_kwh: Number(responseData.energy_used_kwh || 0),
-      total_cost: Number(responseData.total_cost || 0),
+      total_cost: Number(payload.total_cost), // Use the cost from payload
       status: 'IN_PROGRESS'
     };
 
@@ -190,7 +185,7 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
   }
 };
 
-export const stopChargingSession = async (sessionOrId: ChargingSession | number): Promise<ChargingSession> => {
+export const stopChargingSession = async (sessionData: ChargingSession): Promise<ChargingSession> => {
   try {
     const session = await auth();
     if (!session?.user?.apiToken) {
@@ -198,42 +193,12 @@ export const stopChargingSession = async (sessionOrId: ChargingSession | number)
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-
-    // Convert number to session data if needed
-    let sessionData: ChargingSession;
     
-    if (typeof sessionOrId === 'number') {
-      // Fetch session details if only ID is provided
-      const response = await fetch(`${baseUrl}/sessions/${sessionOrId}`, {
-        headers: {
-          'Authorization': `Bearer ${session.user.apiToken}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch session details');
-      }
-
-      const details = await response.json();
-      sessionData = {
-        id: sessionOrId,
-        vehicle_id: details.vehicle_id,
-        port_id: details.port_id,
-        start_time: details.start_time,
-        end_time: new Date().toISOString(),
-        energy_used_kwh: details.energy_used_kwh || 0,
-        total_cost: details.total_cost || calculateCost(details.energy_used_kwh || 0),
-        status: 'COMPLETED'
-      };
-    } else {
-      sessionData = sessionOrId;
-    }
-
-    // Rest of the code remains the same...
+    // Create the stop payload using sessionData's total_cost
     const stopPayload = {
       current_battery_capacity_kw: sessionData.current_battery_capacity_kw ?? 0,
       energy_used_kwh: Math.max(0, sessionData.energy_used_kwh || 0),
-      total_cost: calculateCost(sessionData.energy_used_kwh || 0),
+      total_cost: sessionData.total_cost, // Use the cost from sessionData
       end_time: new Date().toISOString(),
       status: 'COMPLETED' as const
     };
@@ -258,13 +223,13 @@ export const stopChargingSession = async (sessionOrId: ChargingSession | number)
       ...sessionData,
       end_time: new Date().toISOString(),
       energy_used_kwh: Math.max(0, responseData.energy_used_kwh ?? sessionData.energy_used_kwh),
-      total_cost: Math.max(0, responseData.total_cost ?? calculateCost(sessionData.energy_used_kwh)),
+      total_cost: Math.max(0, responseData.total_cost ?? sessionData.total_cost),
       status: 'COMPLETED'
     };
   } catch (error) {
     console.error('Stop charging session failed:', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      sessionOrId
+      sessionData
     });
     throw error;
   }
@@ -293,15 +258,6 @@ export const updateVehicleCapacityAndStopSession = async (
       // Calculate actual energy used and cost
       const actualEnergyUsed = Math.max(0, energyUsed);
       const actualCost = Math.max(0, finalCost || calculateCost(actualEnergyUsed));
-
-      console.log('Stopping charging session:', {
-        sessionId: sessionData.id,
-        energyUsed: actualEnergyUsed,
-        finalCost: actualCost,
-        calculatedCost: calculateCost(actualEnergyUsed),
-        originalEnergyUsed: energyUsed,
-        originalFinalCost: finalCost
-      });
 
       const stopPayload = {
         current_battery_capacity_kw: newCapacity,
@@ -442,9 +398,12 @@ export const updateSessionState = async (sessionId: number, updatedData: Session
       throw new Error('No authentication token available');
     }
 
+    // Format the payload to match backend expectations
     const payload = {
-      ...updatedData,
-      update_battery: true // Add flag for server to update battery
+      energy_used_kwh: Number(updatedData.energy_used_kwh),
+      current_battery_capacity_kw: Number(updatedData.current_battery_level || 0),
+      total_cost: Number(updatedData.total_cost || 0),
+      update_battery: true
     };
 
     const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -458,7 +417,8 @@ export const updateSessionState = async (sessionId: number, updatedData: Session
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update session state');
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update session state');
     }
 
     return await response.json();
@@ -493,25 +453,4 @@ export const updateSessionCost = async (
   }
 };
 
-// Export an async function to get the cost constant
-export async function getCostPerKWH(): Promise<number> {
-  return COST_PER_KWH;
-}
-
-// Export an async function to calculate cost
-export async function calculateChargingCost(energyUsed: number): Promise<number> {
-  return calculateCost(energyUsed);
-}
-
-// Example usage
-const updateSessionWithCost = async (sessionId: number, energyUsed: number) => {
-  try {
-    const updatedSession = await updateSessionCost(sessionId, energyUsed);
-    console.log('Session updated with new cost:', updatedSession.total_cost);
-    return updatedSession;
-  } catch (error) {
-    console.error('Failed to update session cost:', error);
-    throw error;
-  }
-};
 

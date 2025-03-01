@@ -53,7 +53,7 @@ interface ChargingSession {
 }
 
 // Constants
-const COST_PER_KWH = 10; // 10 PLN per kWh
+const COST_PER_KWH = 10; // Change from 1 PLN to 10 PLN per kWh
 
 // Helper functions (keep these outside the component)
 const calculateEnergyUsed = (batteryCapacity: number, currentCapacity: number, previousCapacity: number): number => {
@@ -104,6 +104,11 @@ const calculateCost = (energyKWh: number): number => {
 
 const calculateEnergyFromCost = (cost: number): number => {
   return Number((cost / COST_PER_KWH).toFixed(2));
+};
+
+// Add with other helper functions
+const updateCurrentCost = (energyUsed: number): number => {
+  return Number((energyUsed * COST_PER_KWH).toFixed(2));
 };
 
 export default function ChargingPage() {
@@ -159,6 +164,15 @@ export default function ChargingPage() {
     const newValue = Number(e.target.value);
     if (newValue >= 0) {
       setCost(newValue);
+      
+      if (selectedVehicle && selectedPort) {
+        const chargingPowerKW = Math.min(selectedPort.power_kw || 0, selectedVehicle.max_charging_powerkwh || 0);
+        const energyKWh = newValue / COST_PER_KWH; // Energy in kWh based on cost
+        const timeHours = energyKWh / chargingPowerKW;
+        const timeMinutes = Math.ceil(timeHours * 60);
+        
+        setDuration(timeMinutes);
+      }
     }
   };
 
@@ -361,7 +375,9 @@ export default function ChargingPage() {
   
       setIsSubmitting(true);
       try {
-        const calculatedTime = chargeMode === 'percentage' ? calculateTimeFromPercentage(selectedVehicle, selectedPort, targetPercentage) : estimatedTime;
+        const calculatedTime = chargeMode === 'percentage' 
+          ? calculateTimeFromPercentage(selectedVehicle, selectedPort, targetPercentage) 
+          : estimatedTime;
         
         const chargingSessionData: ChargingSessionData = {
           vehicle_id: selectedVehicle.id,
@@ -369,7 +385,7 @@ export default function ChargingPage() {
           start_time: new Date().toISOString(),
           duration_minutes: calculatedTime,
           energy_used_kwh: 0,
-          total_cost: 0,
+          total_cost: cost, // Use the exact cost input
           status: 'IN_PROGRESS'
         };
   
@@ -423,7 +439,7 @@ export default function ChargingPage() {
 
     try {
         const energyUsed = Math.max(0, currentCapacityKWh - selectedVehicle.current_battery_capacity_kw);
-        const finalCost = Math.max(0, currentCost);
+        const finalCost = Math.max(0, currentCost); // Use currentCost state
 
         // Call the server action to stop charging and update port status
         const result = await stopCurrentChargingSession(
@@ -431,7 +447,7 @@ export default function ChargingPage() {
             selectedVehicle.id,
             currentCapacityKWh,
             energyUsed,
-            finalCost
+            finalCost // Pass the final cost
         );
 
         if (result) {
@@ -456,7 +472,7 @@ export default function ChargingPage() {
                 setIntervalId(null);
             }
 
-            // Update port status to 'wolny' - Add retry logic
+            // Update port status
             if (selectedPort.id) {
                 let retryCount = 0;
                 const maxRetries = 3;
@@ -473,14 +489,14 @@ export default function ChargingPage() {
                                 description: "The session was stopped but the port status couldn't be updated"
                             });
                         }
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                        await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
             }
         }
     } catch (error) {
         console.error('Failed to stop charging:', error);
-        setError(error instanceof Error ? err.message : 'Failed to stop charging');
+        setError(error instanceof Error ? error.message : 'Failed to stop charging');
         
         toast.error("Failed to stop charging", {
             description: error instanceof Error ? error.message : 'Please try again',
@@ -515,25 +531,14 @@ useEffect(() => {
 // Update the effect for cost mode calculations
 useEffect(() => {
   if (chargeMode === 'cost' && selectedVehicle && selectedPort) {
-    // Calculate charging power in kW
     const chargingPowerKW = Math.min(selectedPort.power_kw || 0, selectedVehicle.max_charging_powerkwh || 0);
     
-    // Calculate energy possible with this cost
-    const energyPossible = cost / COST_PER_KWH; // If cost is 1 PLN, energy will be 0.1 kWh
+    // Calculate energy and time based on cost
+    const energyKWh = cost / COST_PER_KWH;
+    const timeHours = energyKWh / chargingPowerKW;
+    const timeMinutes = Math.ceil(timeHours * 60);
     
-    // Calculate time needed in minutes
-    const timeNeededMinutes = Math.ceil((energyPossible / chargingPowerKW) * 60);
-    
-    setDuration(timeNeededMinutes);
-    
-    // Verify the cost calculation
-    const verificationEnergy = calculateEnergy(chargingPowerKW, timeNeededMinutes);
-    const verificationCost = verificationEnergy * COST_PER_KWH;
-    
-    // Update cost if there's a mismatch
-    if (Math.abs(verificationCost - cost) > 0.01) {
-      setCost(Number(verificationCost.toFixed(2)));
-    }
+    setDuration(timeMinutes);
   }
 }, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh]);
 
@@ -543,6 +548,7 @@ useEffect(() => {
     const energyPossible = cost / COST_PER_KWH;
     const timeNeededMinutes = calculateTimeFromEnergy(energyPossible, chargingPowerKW);
     setDuration(timeNeededMinutes);
+    // Remove the cost verification and update
   }
 }, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh]);
 
@@ -599,48 +605,52 @@ useEffect(() => {
 }, [chargeMode, targetPercentage, selectedVehicle, selectedPort]);
 
   useEffect(() => {
-    if (isCharging && sessionResult?.id) {
-      const syncInterval = setInterval(() => {
-        // Calculate energy used
-        const energyUsed = calculateEnergyUsed(
-          selectedVehicle.battery_capacity_kwh,
-          selectedVehicle.battery_condition * 100,
-          currentBatteryLevel
-        );
+  if (isCharging && sessionResult?.id) {
+    const syncInterval = setInterval(() => {
+      // Calculate energy used
+      const energyUsed = calculateEnergyUsed(
+        selectedVehicle.battery_capacity_kwh,
+        selectedVehicle.battery_condition * 100,
+        currentBatteryLevel
+      );
+      
+      // Calculate current cost using the new helper function
+      const newCost = updateCurrentCost(energyUsed);
+      setCurrentCost(newCost);
+      
+      // Update session state with cost
+      updateSessionState(sessionResult.id, {
+        energy_used_kwh: energyUsed,
+        current_battery_level: currentBatteryLevel,
+        total_cost: newCost
+      }).catch(error => {
+        console.error('Failed to sync session state:', error);
+      });
+    }, 30000);
 
-        // Use server action to update state
-        updateSessionState(sessionResult.id, {
-          energy_used_kwh: energyUsed,
-          current_battery_level: currentBatteryLevel,
-          total_cost: currentCost  // Add this line
-        }).catch(error => {
-          console.error('Failed to sync battery state:', error);
-        });
-      }, 30000);
-  
-      return () => clearInterval(syncInterval);
-    }
-  }, [isCharging, sessionResult?.id, currentBatteryLevel, currentCost]); // Add currentCost to dependencies
+    return () => clearInterval(syncInterval);
+  }
+}, [isCharging, sessionResult?.id, currentBatteryLevel, selectedVehicle]);
 
   useEffect(() => {
-    if (isCharging && sessionResult?.id) {
-        const syncInterval = setInterval(() => {
-            // Calculate energy used
-            const energyUsed = calculateEnergyUsed(selectedVehicle.battery_capacity_kwh, selectedVehicle.battery_condition * 100, currentBatteryLevel);
-            
-            // Calculate current cost
-            const currentCost = updateCurrentCost(energyUsed);
-            
-            // Update session state with cost
-            updateSessionState(sessionResult.id, {
-                energy_used_kwh: energyUsed,
-                current_battery_level: currentBatteryLevel,
-                total_cost: currentCost // Add this
-            });
-        }, 30000);
+  if (isCharging && sessionResult?.id) {
+    const syncInterval = setInterval(() => {
+      // Calculate energy used
+      const energyUsed = calculateEnergyUsed(selectedVehicle.battery_capacity_kwh, selectedVehicle.battery_condition * 100, currentBatteryLevel);
+      
+      // Calculate current cost
+      const currentCost = updateCurrentCost(energyUsed);
+      
+      // Update session state with cost
+      updateSessionState(sessionResult.id, {
+          energy_used_kwh: energyUsed,
+          current_battery_level: currentBatteryLevel,
+          total_cost: currentCost // Add this
+      });
+    }, 30000);
 
-        return () => clearInterval(syncInterval);
-    }
+    return () => clearInterval(syncInterval);
+  }
 }, [isCharging, sessionResult?.id, currentBatteryLevel]);
 
 useEffect(() => {
@@ -710,11 +720,15 @@ useEffect(() => {
         // Calculate energy used correctly
         const energyUsed = Math.max(0, currentCapacityKWh - selectedVehicle.current_battery_capacity_kw);
         
+        // Calculate current cost
+        const newCost = updateCurrentCost(energyUsed);
+        setCurrentCost(newCost);
+
         // Format the update data
         const sessionUpdateData = {
           energy_used_kwh: Number(energyUsed.toFixed(2)),
-          current_battery_level: Math.min(100, Number((currentCapacityKWh / selectedVehicle.battery_capacity_kwh * 100).toFixed(2))),
-          total_cost: Number(currentCost.toFixed(2))
+          current_battery_level: currentBatteryLevel,
+          total_cost: newCost // Use the calculated cost
         };
 
         updateSessionState(sessionResult.id, sessionUpdateData)
@@ -728,7 +742,7 @@ useEffect(() => {
 
     return () => clearInterval(syncInterval);
   }
-}, [isCharging, sessionResult?.id, currentCapacityKWh, selectedVehicle, currentCost]);
+}, [isCharging, sessionResult?.id, currentCapacityKWh, selectedVehicle, currentBatteryLevel]);
 
   useEffect(() => {
   const checkActiveSession = async () => {
@@ -785,6 +799,26 @@ useEffect(() => {
     const energyToBeUsed = chargingPowerKW * durationHours;
     
     // Calculate estimated cost (COST_PER_KWH is 1 PLN)
+    const estimatedCost = energyToBeUsed * COST_PER_KWH;
+    
+    // Update cost state with 2 decimal places
+    setCost(Number(estimatedCost.toFixed(2)));
+  }
+}, [duration, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh]);
+
+// Update the time-based cost calculation effect
+useEffect(() => {
+  if (chargeMode === 'time' && duration > 0 && selectedVehicle && selectedPort) {
+    // Calculate charging power in kW (minimum of port power and vehicle max charging power)
+    const chargingPowerKW = Math.min(selectedPort.power_kw || 0, selectedVehicle.max_charging_powerkwh || 0);
+    
+    // Convert duration from minutes to hours
+    const durationHours = duration / 60;
+    
+    // Calculate energy that will be used in kWh
+    const energyToBeUsed = chargingPowerKW * durationHours;
+    
+    // Calculate cost (10 PLN per kWh)
     const estimatedCost = energyToBeUsed * COST_PER_KWH;
     
     // Update cost state with 2 decimal places
