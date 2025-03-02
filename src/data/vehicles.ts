@@ -90,14 +90,29 @@ export const createVehicle = async (vehicleData: CreateVehicleData): Promise<Veh
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
-        // Add user_id to the vehicle data
+        // Format the data with proper type conversions
         const completeVehicleData = {
             ...vehicleData,
-            user_id: session.user.id
+            user_id: session.user.id,
+            battery_capacity_kwh: Math.round(Math.max(0, Number(vehicleData.battery_capacity_kwh || 0))),
+            max_charging_powerkwh: Math.round(Math.max(0, Number(vehicleData.max_charging_powerkWh || 0))),
+            // Send battery condition as is (already as percentage)
+            battery_condition: Math.min(100, Math.max(0, vehicleData.battery_condition)),
+            current_battery_capacity_kw: Number(
+                Math.min(
+                    Number(vehicleData.current_battery_capacity_kw || 0),
+                    Number(vehicleData.battery_capacity_kwh || 0)
+                ).toFixed(2)
+            )
         };
-        
-        console.log("Creating vehicle with data:", completeVehicleData);
-        
+
+        // Update validation to check percentage values
+        if (completeVehicleData.battery_condition < 0 || completeVehicleData.battery_condition > 100) {
+            throw new Error('Battery condition must be between 0 and 100%');
+        }
+
+        console.log('Creating vehicle with data:', completeVehicleData);
+
         const response = await fetch(`${baseUrl}/vehicles`, {
             method: 'POST',
             headers: {
@@ -107,27 +122,42 @@ export const createVehicle = async (vehicleData: CreateVehicleData): Promise<Veh
             body: JSON.stringify(completeVehicleData)
         });
 
-        const errorData = await response.json();
+        let responseData;
+        try {
+            responseData = await response.json();
+        } catch (e) {
+            const textResponse = await response.text();
+            if (textResponse.includes("vehicles_license_plate_unique")) {
+                throw new Error("A vehicle with this license plate already exists");
+            }
+            throw new Error(`Server error: ${textResponse}`);
+        }
 
         if (!response.ok) {
-            // Handle FastAPI validation errors
+            // Handle duplicate license plate from different error formats
+            if (response.status === 409 || 
+                (responseData.detail && 
+                 (responseData.detail.includes("license_plate") || 
+                  responseData.detail.includes("UniqueViolation")))) {
+                throw new Error("A vehicle with this license plate already exists");
+            }
+            
+            // Handle validation errors
             if (response.status === 422) {
-                const validationErrors = errorData.detail;
+                const validationErrors = responseData.detail;
                 const errorMessage = Array.isArray(validationErrors) 
                     ? validationErrors.map(e => e.msg).join(', ')
                     : 'Validation error';
                 throw new Error(errorMessage);
             }
             
-            // Handle other API errors
-            throw new Error(errorData.detail || 'Failed to create vehicle');
+            throw new Error(responseData.detail || 'Failed to create vehicle');
         }
 
-        console.log("Vehicle created successfully:", errorData);
-        return errorData;
+        return responseData;
     } catch (error) {
         console.error("Error in createVehicle:", error);
-        throw error instanceof Error ? error : new Error('An unexpected error occurred');
+        throw error instanceof Error ? error : new Error('Failed to create vehicle');
     }
 };
 

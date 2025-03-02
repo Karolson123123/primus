@@ -2,11 +2,15 @@
 
 import { auth } from "@/auth";
 
+// Update interface to match backend schema
 interface Payment {
     id: number;
-    name: string;
-    latitude: number;
-    longitude: number;
+    user_id: string;
+    session_id: number;
+    amount: number;
+    status: string;
+    transaction_id: number;
+    payment_method: string;
     created_at: string;
 }
 
@@ -31,31 +35,68 @@ export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-                error: "Failed to parse error response"
-            }));
-            console.error("API Error:", {
-                status: response.status,
-                statusText: response.statusText,
-                error: errorData
-            });
+            throw new Error('Failed to fetch payments');
+        }
+
+        const payments = await response.json();
+        
+        // Sort payments by status priority and ID
+        return payments.sort((a: Payment, b: Payment) => {
+            // First, sort by status priority
+            const getStatusPriority = (status: string) => {
+                switch (status.toLowerCase()) {
+                    case 'pending': return 0;
+                    case 'failed': return 1;
+                    case 'completed': return 2;
+                    default: return 3;
+                }
+            };
+
+            const statusPriorityA = getStatusPriority(a.status);
+            const statusPriorityB = getStatusPriority(b.status);
+
+            if (statusPriorityA !== statusPriorityB) {
+                return statusPriorityA - statusPriorityB;
+            }
+
+            // If status is the same, sort by ID in descending order
+            return b.id - a.id;
+        });
+
+    } catch (error) {
+        console.error('Error fetching payments:', error);
+        return null;
+    }
+};
+
+// Add function to create payment
+export const createPayment = async (paymentData: Omit<Payment, 'id' | 'created_at'>): Promise<Payment | null> => {
+    try {
+        const session = await auth();
+        
+        if (!session?.user?.apiToken) {
+            console.error("No authentication token available");
             return null;
         }
 
-        const data = await response.json();
-        console.log("Successfully fetched payments:", {
-            count: data?.length || 0
-        });
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
-        return data;
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error("Error in getPaymentsInfo:", {
-                name: error.name,
-                message: error instanceof Error ? error.message : "Unknown error",
-                error: JSON.stringify(error, null, 2)
-            });
+        const response = await fetch(`${baseUrl}/payments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.user.apiToken}`
+            },
+            body: JSON.stringify(paymentData)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create payment record');
         }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating payment:', error);
         return null;
     }
 }

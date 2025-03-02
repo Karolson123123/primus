@@ -1,4 +1,0 @@
-interface StationsInfoProps {
-    name?: string;
-    
-}

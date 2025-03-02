@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "./ui/badge";
 import { getVehicles } from "@/data/vehicles";
@@ -24,15 +24,17 @@ interface VehiclesInfoProps {
 }
 
 const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
-  console.log('Vehicle data:', vehicle); // Add this line to debug
   const [showDetails, setShowDetails] = useState(false);
-
   const toggleDetails = () => setShowDetails((prev) => !prev);
+
+  // Calculate battery percentages
+  const batteryConditionPercentage = Math.round(vehicle.battery_condition * 100);
+  const currentBatteryPercentage = Math.round((vehicle.current_battery_capacity_kw / vehicle.battery_capacity_kwh) * 100);
 
   return (
     <div
       onClick={toggleDetails}
-      className="cursor-pointer rounded-lg border p-4 space-y-2"
+      className="cursor-pointer rounded-lg border border-[var(--yellow)] p-4 space-y-2 bg-[var(--cardblack)]"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -71,40 +73,27 @@ const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
           showDetails ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="mt-2 space-y-2">
-          <div className="flex justify-between items-center">
-            <p className="text-md font-medium text-white">Pojemność baterii</p>
-            <p className="text-md text-white p-1 bg-gray-700 rounded-md">
-              {vehicle.battery_capacity_kwh} kWh
-            </p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-md font-medium text-white">Stan baterii</p>
-            <Badge
-              variant={
-                vehicle.battery_condition > 0.7 ? "success" : "destructive"
-              }
-            >
-              {Math.round(vehicle.battery_condition * 100)}%
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-md font-medium text-white">
-                Battery Condition
-              </label>
+        <div className="mt-4 space-y-4 border-t border-[var(--yellow)] pt-4">
+          {/* Battery Information Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-400">Battery Capacity</p>
+              <div className="flex items-center space-x-2">
+                <p className="text-md text-white p-1 bg-gray-700 rounded-md">
+                  {vehicle.battery_capacity_kwh} kWh
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-400">Battery Condition</p>
               <Badge 
                 variant={vehicle.battery_condition > 0.7 ? "success" : "destructive"}
               >
-                {Math.round(vehicle.battery_condition * 100)}%
+                {batteryConditionPercentage}%
               </Badge>
             </div>
-            
-            {/* Add current battery level */}
-            <div>
-              <label className="text-md font-medium text-white">
-                Current Battery
-              </label>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-400">Current Battery</p>
               <Badge 
                 variant={
                   (vehicle.current_battery_capacity_kw / vehicle.battery_capacity_kwh) > 0.7 
@@ -112,8 +101,17 @@ const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
                     : "destructive"
                 }
               >
-                {Math.round((vehicle.current_battery_capacity_kw / vehicle.battery_capacity_kwh) * 100)}%
+                {currentBatteryPercentage}%
               </Badge>
+            </div>
+            {/* Add Max Charging Power */}
+            <div className="space-y-2">
+              <p className="text-sm text-gray-400">Max Charging Power</p>
+              <div className="flex items-center space-x-2">
+                <p className="text-md text-white p-1 bg-gray-700 rounded-md">
+                  {vehicle.max_charging_powerkwh} kW
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -123,10 +121,19 @@ const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
 };
 
 export const VehiclesInfo = ({
-    vehicles,
+    vehicles = [],
     label,
     isLoading = false,
 }: VehiclesInfoProps) => {
+    const [displayCount, setDisplayCount] = useState(5); // Start with 5 vehicles
+    
+    const handleLoadMore = useCallback(() => {
+        setDisplayCount(prevCount => {
+            const nextCount = prevCount + 5;
+            return nextCount > vehicles.length ? vehicles.length : nextCount;
+        });
+    }, [vehicles.length]);
+
     if (isLoading) {
         return (
             <Card className="bg-[var(--cardblack)] w-[90%]">
@@ -145,6 +152,12 @@ export const VehiclesInfo = ({
             </Card>
         );
     }
+
+    // Get the vehicles to display based on current displayCount
+    const displayedVehicles = vehicles.slice(0, displayCount);
+    const remainingCount = vehicles.length - displayCount;
+    const hasMore = remainingCount > 0;
+
     return (
         <Card className="bg-[var(--cardblack)] w-[90%]">
             <CardHeader>
@@ -153,9 +166,20 @@ export const VehiclesInfo = ({
                 </p>
             </CardHeader>
             <CardContent className="space-y-4">
-                {vehicles?.map((vehicle) => (
+                {displayedVehicles.map((vehicle) => (
                     <VehicleCard key={vehicle.id} vehicle={vehicle} />
                 ))}
+
+                {hasMore && (
+                    <div className="flex justify-center mt-6">
+                        <button 
+                            onClick={handleLoadMore}
+                            className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+                        >
+                            Load More ({remainingCount} remaining)
+                        </button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

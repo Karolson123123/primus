@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getChargingSessionsInfo } from "@/data/charging-session";
@@ -209,6 +209,7 @@ const ChargingSessionCard = ({
   );
 };
 
+// Add displayCount state and handleLoadMore function at the top of ChargingSessionInfo component
 export const ChargingSessionInfo = ({
   label,
   isLoading = false,
@@ -217,6 +218,28 @@ export const ChargingSessionInfo = ({
   const [ports, setPorts] = useState<Port[]>([]);
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [displayCount, setDisplayCount] = useState(4); // Start with 5 sessions
+
+  const handleLoadMore = useCallback(() => {
+    setDisplayCount(prevCount => {
+      const nextCount = prevCount + 4;
+      return nextCount > sessions.length ? sessions.length : nextCount;
+    });
+  }, [sessions.length]);
+
+  const sortSessions = useCallback((sessionsToSort: ChargingSession[]) => {
+    return [...sessionsToSort].sort((a, b) => {
+      // First priority: Sessions that need payment (COMPLETED status with pending payment)
+      const aNeedsPayment = a.status === 'COMPLETED' && (!a.payment_status || a.payment_status === 'PENDING');
+      const bNeedsPayment = b.status === 'COMPLETED' && (!b.payment_status || b.payment_status === 'PENDING');
+      
+      if (aNeedsPayment && !bNeedsPayment) return -1;
+      if (!aNeedsPayment && bNeedsPayment) return 1;
+      
+      // Second priority: Sort by date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, []);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -224,14 +247,14 @@ export const ChargingSessionInfo = ({
         const sessionsData = await getChargingSessionsInfo();
         console.log(sessionsData);
         if (sessionsData) {
-          setSessions(sessionsData);
+          setSessions(sortSessions(sessionsData));
         }
       } catch (error) {
         console.error("Error fetching sessions:", error);
       }
     };
     fetchSessions();
-  }, []);
+  }, [sortSessions]);
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -309,7 +332,7 @@ export const ChargingSessionInfo = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {sessions.map((session) => {
+          {sessions.slice(0, displayCount).map((session) => {
             const associatedVehicle = vehicles.find(
               (vehicle) => vehicle.id === session.vehicle_id
             );
@@ -329,8 +352,19 @@ export const ChargingSessionInfo = ({
               />
             );
           })}
+
+          {/* Add Load More button */}
+          {sessions.length > displayCount && (
+            <div className="flex justify-center mt-6">
+              <button 
+                onClick={handleLoadMore}
+                className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+              >
+                Load More ({sessions.length - displayCount} remaining)
+              </button>
+            </div>
+          )}
         </CardContent>
-        
       </Card>
     </div>
   );

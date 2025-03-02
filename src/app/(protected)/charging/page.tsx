@@ -438,8 +438,21 @@ export default function ChargingPage() {
     setIsSubmitting(true);
 
     try {
+        // Clear all intervals first
+        if (intervalId) {
+            clearInterval(intervalId);
+            setIntervalId(null);
+        }
+
         const energyUsed = Math.max(0, currentCapacityKWh - selectedVehicle.current_battery_capacity_kw);
         const finalCost = Math.max(0, currentCost);
+
+        // Do one final state update before stopping
+        await updateSessionState(sessionResult.id, {
+            energy_used_kwh: energyUsed,
+            current_battery_level: currentBatteryLevel,
+            total_cost: finalCost
+        });
 
         const result = await stopCurrentChargingSession(
             sessionResult.id,
@@ -450,6 +463,11 @@ export default function ChargingPage() {
         );
 
         if (result) {
+            // Clear session state immediately
+            setIsCharging(false);
+            setRemainingTime(0);
+            
+            // Show success toast with payment option
             toast.success("Charging Complete", {
                 description: `Final cost: ${finalCost.toFixed(2)} PLN | Energy used: ${energyUsed.toFixed(2)} kWh`,
                 duration: 50000,
@@ -458,32 +476,9 @@ export default function ChargingPage() {
                     onClick: () => router.push(`/payment?sessionId=${sessionResult.id}&amount=${finalCost}`)
                 }
             });
-
-            // Reset states
-            setSessionResult(null);
-            setIsCharging(false);
-            setRemainingTime(0);
-            
-            // Clear intervals
-            if (intervalId) {
-                clearInterval(intervalId);
-                setIntervalId(null);
-            }
-
-            // Show payment button in UI
-            return (
-                <Button
-                    onClick={() => router.push(`/payment?sessionId=${sessionResult.id}&amount=${finalCost}`)}
-                    className="w-full mt-4 bg-[var(--yellow)] hover:bg-yellow-600 text-black"
-                >
-                    Proceed to Payment
-                </Button>
-            );
         }
     } catch (error) {
         console.error('Failed to stop charging:', error);
-        setError(error instanceof Error ? error.message : 'Failed to stop charging');
-        
         toast.error("Failed to stop charging", {
             description: error instanceof Error ? error.message : 'Please try again'
         });
@@ -1135,6 +1130,15 @@ useEffect(() => {
                             Current Cost: {(currentCost || 0).toFixed(2)} PLN
                           </p>
                         </>
+                      )}
+                      {/* Add payment button for completed sessions */}
+                      {!isCharging && (
+                        <Button
+                          onClick={() => router.push(`/payment?sessionId=${sessionResult.id}&amount=${currentCost}`)}
+                          className="w-full mt-4 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black"
+                        >
+                          Proceed to Payment
+                        </Button>
                       )}
                     </div>
                   )}

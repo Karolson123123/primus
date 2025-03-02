@@ -57,15 +57,30 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                 setError('Maximum charging power must be a positive number');
                 return;
             }
+            if (formData.current_battery_capacity_kw > formData.battery_capacity_kwh) {
+                setError('Current battery level cannot exceed battery capacity');
+                return;
+            }
+            if (formData.current_battery_capacity_kw < 0) {
+                setError('Current battery level cannot be negative');
+                return;
+            }
 
             // Format data to match backend types
             const vehicleData = {
+                ...formData,
                 license_plate: formData.license_plate.trim(),
                 brand: formData.brand.trim(),
-                battery_capacity_kWh: Math.round(formData.battery_capacity_kwh), // Ensure integer
-                battery_condition: Number((formData.battery_condition / 100).toFixed(2)), // Convert to 0-1 float with 2 decimal places
-                max_charging_powerkWh: Math.round(formData.max_charging_powerkwh), // Ensure integer
-                current_battery_capacity_kw: Math.round(formData.battery_capacity_kwh) // Copy battery capacity as integer
+                battery_capacity_kwh: Math.round(Math.max(0, Number(formData.battery_capacity_kwh))),
+                // Fix battery condition conversion
+                battery_condition: Number((formData.battery_condition / 100).toFixed(2)), // Convert to decimal (0-1)
+                max_charging_powerkwh: Math.round(Math.max(0, Number(formData.max_charging_powerkwh))),
+                current_battery_capacity_kw: Number(
+                    Math.min(
+                        Number(formData.current_battery_capacity_kw),
+                        Number(formData.battery_capacity_kwh)
+                    ).toFixed(2)
+                )
             };
 
             console.log('Submitting vehicle data:', vehicleData);
@@ -78,7 +93,7 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                     license_plate: '',
                     brand: '',
                     battery_capacity_kwh: 0,
-                    battery_condition: 100,
+                    battery_condition: 100, // Reset to 100%
                     max_charging_powerkwh: 0,
                     current_battery_capacity_kw: 0
                 });
@@ -126,7 +141,7 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium">
-                            Battery Capacity (kWh) *
+                            Battery Capacity (kW) *
                         </label>
                         <Input
                             type="number"
@@ -134,7 +149,7 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             onChange={(e) =>
                                 setFormData({ 
                                     ...formData, 
-                                    battery_capacity_kwh: parseFloat(e.target.value) 
+                                    battery_capacity_kwh: Math.max(0, Number(e.target.value))
                                 })
                             }
                             required
@@ -147,7 +162,7 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium">
-                            Maximum Charging Power (kW) *
+                            Maximum Charging Power (kWh) *
                         </label>
                         <Input
                             type="number"
@@ -168,21 +183,48 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium">
-                            Battery Condition (%)
+                            Battery Condition (%) *
                         </label>
                         <Input
                             type="number"
                             value={formData.battery_condition}
+                            onChange={(e) => {
+                                const value = Number(e.target.value);
+                                setFormData({ 
+                                    ...formData, 
+                                    battery_condition: Math.min(100, Math.max(0, value)) // Keep as percentage (0-100)
+                                });
+                            }}
+                            required
                             min="0"
                             max="100"
                             step="1"
+                            placeholder="Enter battery condition (0-100%)"
+                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">
+                            Current Battery Level (kW) *
+                        </label>
+                        <Input
+                            type="number"
+                            value={formData.current_battery_capacity_kw}
                             onChange={(e) =>
                                 setFormData({ 
                                     ...formData, 
-                                    battery_condition: parseFloat(e.target.value) 
+                                    current_battery_capacity_kw: Math.min(
+                                        Math.max(0, Number(e.target.value)),
+                                        formData.battery_capacity_kwh
+                                    )
                                 })
                             }
-                            placeholder="Enter battery condition"
+                            required
+                            min="0"
+                            max={formData.battery_capacity_kwh}
+                            step="0.1"
+                            placeholder="Enter current battery level"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm"
                             disabled={isSubmitting}
                         />

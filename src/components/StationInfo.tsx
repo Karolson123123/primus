@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getStationsInfo, deleteStation, updateStation } from "@/data/stations";
 import { useEffect } from "react";
@@ -43,7 +43,6 @@ const StationCard = ({ station }: { station: Station }) => {
   const [ports, setPorts] = useState<Port[]>([]);
   const [selectedPort, setSelectedPort] = useState<Port | null>(null);
   const [showPortForm, setShowPortForm] = useState(false);
-  const [cityName, setCityName] = useState<string>('');
   const [showEditStation, setShowEditStation] = useState(false);
   const [showEditPort, setShowEditPort] = useState<number | null>(null);
   const [editStationData, setEditStationData] = useState(station);
@@ -151,7 +150,6 @@ const StationCard = ({ station }: { station: Station }) => {
         power: selectedPort.power_kw.toString(),
         portNumber: selectedPort.number?.toString() || '1',
         station: station.id.toString(),
-        city: cityName || '',
         name: station.name
       });
   
@@ -433,9 +431,12 @@ export const StationsInfo = ({
     const [displayCount, setDisplayCount] = useState(5); // Start with 5 stations
     
     // Move this inside the component
-    const handleLoadMore = () => {
-        setDisplayCount((prevCount) => Math.min(prevCount + 5, stations.length));
-    };
+    const handleLoadMore = useCallback(() => {
+        setDisplayCount(prevCount => {
+            const nextCount = prevCount + 5;
+            return nextCount > stations.length ? stations.length : nextCount;
+        });
+    }, [stations.length]);
 
     if (isLoading) {
         return (
@@ -477,16 +478,17 @@ export const StationsInfo = ({
                 
                 {hasMore && (
                     <div className="flex justify-center mt-6">
-                        <Button 
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleLoadMore();
-                            }}
-                            variant="default"
-                            className="bg-[var(--yellow)] hover:bg-yellow-600 text-black px-4 py-2 rounded-lg transition-colors duration-200"
+                        <button 
+                            onClick={handleLoadMore}
+                            className="bg-[var(--yellow)] hover:bg-yellow-600 text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isLoading}
                         >
-                            Load More ({remainingCount} remaining)
-                        </Button>
+                            {isLoading ? (
+                                <span>Loading...</span>
+                            ) : (
+                                <span>Load More ({remainingCount} remaining)</span>
+                            )}
+                        </button>
                     </div>
                 )}
             </CardContent>

@@ -69,11 +69,14 @@ export const getChargingSessionsInfo = async (): Promise<ChargingSession[] | nul
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch vehicles');
+            // Changed error message to be more specific
+            throw new Error('Failed to fetch charging sessions');
         }
+
         return await response.json();
     } catch (error) {
-        console.error("Error fetching vehicles:", error);
+        // Updated error logging to be more specific
+        console.error("Error fetching charging sessions:", error);
         return null;
     }
 };
