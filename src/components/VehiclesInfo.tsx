@@ -6,6 +6,9 @@ import { Badge } from "./ui/badge";
 import { getVehicles } from "@/data/vehicles";
 import { useEffect, useState as useReactState } from "react";
 import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react"; // Make sure you have lucide-react installed
+
 interface Vehicle {
   id: number;
   license_plate: string;
@@ -22,6 +25,9 @@ interface VehiclesInfoProps {
     label: string;
     isLoading?: boolean;
 }
+
+// First, add this type definition after your existing interfaces
+type SortOption = 'battery' | 'capacity' | 'alphabetical' | 'condition';
 
 const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -120,13 +126,41 @@ const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
   );
 };
 
+// Update the VehiclesInfo component
 export const VehiclesInfo = ({
     vehicles = [],
     label,
     isLoading = false,
 }: VehiclesInfoProps) => {
-    const [displayCount, setDisplayCount] = useState(5); // Start with 5 vehicles
-    
+    const [displayCount, setDisplayCount] = useState(5);
+    const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
+    // Add search state
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const sortAndFilterVehicles = useCallback((vehicles: Vehicle[]) => {
+        // First filter
+        const filteredVehicles = vehicles.filter(vehicle => 
+            vehicle.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            vehicle.license_plate.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        // Then sort
+        return filteredVehicles.sort((a, b) => {
+            switch (sortBy) {
+                case 'battery':
+                    return (b.current_battery_capacity_kw / b.battery_capacity_kwh) - 
+                           (a.current_battery_capacity_kw / a.battery_capacity_kwh);
+                case 'capacity':
+                    return b.battery_capacity_kwh - a.battery_capacity_kwh;
+                case 'condition':
+                    return b.battery_condition - a.battery_condition;
+                case 'alphabetical':
+                default:
+                    return a.brand.localeCompare(b.brand);
+            }
+        });
+    }, [sortBy, searchQuery]);
+
     const handleLoadMore = useCallback(() => {
         setDisplayCount(prevCount => {
             const nextCount = prevCount + 5;
@@ -153,17 +187,47 @@ export const VehiclesInfo = ({
         );
     }
 
-    // Get the vehicles to display based on current displayCount
-    const displayedVehicles = vehicles.slice(0, displayCount);
+    // Get the sorted and sliced vehicles
+    const displayedVehicles = sortAndFilterVehicles(vehicles).slice(0, displayCount);
     const remainingCount = vehicles.length - displayCount;
     const hasMore = remainingCount > 0;
 
     return (
         <Card className="bg-[var(--cardblack)] w-[90%]">
             <CardHeader>
-                <p className="text-2xl font-semibold text-center text-white">
-                    {label}
-                </p>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p className="text-2xl font-semibold text-white">
+                        {label}
+                    </p>
+                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                        {/* Search input */}
+                        <div className="relative w-full md:w-64">
+                            <Input
+                                type="text"
+                                placeholder="Search vehicles..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        </div>
+                        
+                        {/* Existing sort dropdown */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Sort by:</span>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                            >
+                                <option value="alphabetical">Alphabetical</option>
+                                <option value="battery">Battery %</option>
+                                <option value="capacity">Max Capacity</option>
+                                <option value="condition">Battery Condition</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 {displayedVehicles.map((vehicle) => (

@@ -20,19 +20,39 @@ export interface CreatePortData {
 export const getPortsInfo = async (): Promise<Port[] | null> => {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        
+        // Add better error handling and logging
+        console.log('Fetching ports from:', `${baseUrl}/ports`);
+        
         const response = await fetch(`${baseUrl}/ports`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache'
+            },
+            next: { revalidate: 0 } // Disable caching
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch ports');
+            const errorText = await response.text();
+            console.error('Ports API Error:', {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorText
+            });
+            throw new Error(`Failed to fetch ports: ${response.status} ${response.statusText}`);
         }
-        return await response.json();
+
+        const data = await response.json();
+        console.log('Successfully fetched ports:', {
+            count: data?.length || 0
+        });
+        return data;
     } catch (error) {
-        console.error("Error fetching ports:", error);
+        console.error("Error fetching ports:", {
+            name: error?.name,
+            message: error instanceof Error ? error.message : String(error)
+        });
         return null;
     }
 }

@@ -5,7 +5,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import * as L from 'leaflet';
 import { LatLngTuple } from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { getStationsInfo } from '@/data/stations';
 import useGeoLocation from '@/lib/geo-location';  
 import { getPortsInfo } from '@/data/ports';
@@ -122,6 +122,61 @@ function LocationUpdater({ position }: { position: LatLngTuple }) {
     return null;
 }
 
+// Add at the top of the file or near other interfaces
+interface SearchBoxWithMapProps {
+    stations: Station[];
+    width: string;
+    setActiveMarker: (index: number | null) => void;
+}
+
+function SearchBoxWithMap({ stations, width, setActiveMarker }: SearchBoxWithMapProps) {
+    const map = useMap();
+    const [searchMarker, setSearchMarker] = useState<L.Marker | null>(null);
+
+    const handleStationSelect = (station: Station) => {
+        // Remove existing search marker if any
+        if (searchMarker) {
+            searchMarker.remove();
+        }
+
+        // Create and add new marker
+        const marker = L.marker([station.latitude, station.longitude], { icon: searchIcon })
+            .addTo(map);
+        setSearchMarker(marker);
+
+        // Pan to the location
+        map.panTo([station.latitude, station.longitude]);
+
+        // Find the station index and set it as active
+        const stationIndex = stations.findIndex(s => s.id === station.id);
+        if (stationIndex !== -1) {
+            setActiveMarker(stationIndex);
+        }
+    };
+
+    return (
+        <SearchBox 
+            stations={stations} 
+            width={width}
+            onStationSelect={handleStationSelect}
+        />
+    );
+}
+
+// First, add these bounds constants at the top of your file, after the imports
+// const MAX_BOUNDS: L.LatLngBoundsLiteral = [
+//     [48.9, 14.12], // Southwest coordinates
+//     [54.9, 24.15]  // Northeast coordinates
+// ];
+
+const MIN_ZOOM = 2;
+const MAX_ZOOM = 18;
+
+// Add these constants at the top of your file
+const WORLD_BOUNDS: L.LatLngBoundsLiteral = [
+    [-90, -180], // Southwest coordinates
+    [90, 180]    // Northeast coordinates
+];
 
 export default function Map({ height = "800px", width = "100%", selectedStationId }: MapProps) {
     const router = useRouter();
@@ -129,18 +184,21 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
     const [ports, setPorts] = useState<Port[]>([]);
     const [activeMarker, setActiveMarker] = useState<number | null>(null);
     const [selectedPort, setSelectedPort] = useState<Port | null>(null);
+    const chargingButtonRef = useRef<HTMLButtonElement>(null);
 
     // existing code for fetching ports and stations
     useEffect(() => {
         const fetchPorts = async () => {
             try {
                 const portsData = await getPortsInfo();
-                console.log(portsData);
-                if (portsData) {
-                    setPorts(portsData);
+                if (portsData === null) {
+                    console.error('Failed to fetch ports data');
+                    return;
                 }
+                console.log('Ports data received:', portsData.length);
+                setPorts(portsData);
             } catch (error) {
-                console.error('Error fetching stations:', error);
+                console.error('Error in ports fetch:', error);
             }
         };
         fetchPorts();
@@ -181,13 +239,23 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
                 zoom={13}
                 scrollWheelZoom={true}
                 style={{ height, width, zIndex: "0" }}
+                maxZoom={MAX_ZOOM}
+                minZoom={MIN_ZOOM}
+                doubleClickZoom={true}
+                maxBounds={WORLD_BOUNDS}
+                maxBoundsViscosity={1.0}
+                worldCopyJump={true}
             >
                 <LocationUpdater position={center} />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <SearchBox stations={stations}></SearchBox>
+                <SearchBoxWithMap 
+                    stations={stations} 
+                    width="400px"
+                    setActiveMarker={setActiveMarker}
+                />
                 {location.loaded && !location.error && location.coordinates && (
                     <Marker 
                         icon={locationIcon} 
@@ -289,7 +357,16 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
     {ports.filter(port => port.station_id === station.id).map((port, index) => (
         <div 
             key={port.id} 
-            onClick={() => setSelectedPort(port.status === 'wolny' ? port : null)}
+            onClick={() => {
+                setSelectedPort(port.status === 'wolny' ? port : null);
+                // Add smooth scrolling to the charging button
+                setTimeout(() => {
+                    chargingButtonRef.current?.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }, 100);
+            }}
             className={`flex items-center gap-4 text-xl p-4 rounded-lg cursor-pointer transition-all
                 ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
                 ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-gray-800' : ''}
@@ -312,6 +389,7 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
                             {/* Add the new charging button section */}
                             <section className='bg-[var(--cardblack)] rounded-3xl p-7 w-full'>
     <button
+        ref={chargingButtonRef}
         onClick={() => {
             if (selectedPort) {
                 // Get all ports for this station

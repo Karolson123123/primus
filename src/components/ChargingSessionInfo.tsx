@@ -8,6 +8,8 @@ import { getVehicles } from "@/data/vehicles";
 import { getPortsInfo } from "@/data/ports";
 import { getStationsInfo } from "@/data/stations";
 import { useRouter } from 'next/navigation';
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface ChargingSession {
   id: number;
@@ -51,6 +53,9 @@ interface Port {
   power_kw: number;
   station_id: Station['id'];
 }
+
+type FilterOption = 'all' | 'completed' | 'in_progress' | 'pending_payment';
+type SortOption = 'newest' | 'oldest' | 'highest_cost' | 'lowest_cost';
 
 const getPaymentStatusColor = (status?: string) => {
   switch (status) {
@@ -219,6 +224,9 @@ export const ChargingSessionInfo = ({
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [displayCount, setDisplayCount] = useState(4); // Start with 5 sessions
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterBy, setFilterBy] = useState<FilterOption>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   const handleLoadMore = useCallback(() => {
     setDisplayCount(prevCount => {
@@ -240,6 +248,38 @@ export const ChargingSessionInfo = ({
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   }, []);
+
+  const filterAndSortSessions = useCallback((sessionsToProcess: ChargingSession[]) => {
+    let filtered = sessionsToProcess.filter(session => {
+      // Get the associated vehicle for the session
+      const associatedVehicle = vehicles.find(v => v.id === session.vehicle_id);
+      
+      const matchesSearch = searchQuery === '' || // If no search query, include all
+        associatedVehicle?.license_plate.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        associatedVehicle?.brand.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesFilter = filterBy === 'all' ? true :
+        filterBy === 'pending_payment' ? (session.status === 'COMPLETED' && (!session.payment_status || session.payment_status === 'PENDING')) :
+        filterBy === 'in_progress' ? session.status === 'IN_PROGRESS' :
+        session.status === filterBy.toUpperCase();
+
+      return matchesSearch && matchesFilter;
+    });
+
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'highest_cost':
+          return b.total_cost - a.total_cost;
+        case 'lowest_cost':
+          return a.total_cost - b.total_cost;
+        case 'newest':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+}, [searchQuery, filterBy, sortBy, vehicles]);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -327,40 +367,90 @@ export const ChargingSessionInfo = ({
     <div>
       <Card className="bg-[var(--cardblack)] w-[90%] border border-[var(--yellow)]">
         <CardHeader>
-          <p className="text-2xl font-semibold text-center text-white">
-            {label}
-          </p>
+          <div className="flex flex-col gap-4">
+            <p className="text-2xl font-semibold text-center text-white">
+              {label}
+            </p>
+            
+            {/* Search and Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Box */}
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search by name or license plate..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              </div>
+
+              {/* Filter Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400">Filter:</span>
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                  className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                >
+                  <option value="all">All Sessions</option>
+                  <option value="completed">Completed</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="pending_payment">Pending Payment</option>
+                </select>
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="highest_cost">Highest Cost</option>
+                  <option value="lowest_cost">Lowest Cost</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </CardHeader>
+        
         <CardContent className="space-y-4">
-          {sessions.slice(0, displayCount).map((session) => {
-            const associatedVehicle = vehicles.find(
-              (vehicle) => vehicle.id === session.vehicle_id
-            );
-            const associatedPort = ports.find(
-              (port) => port.id === Number(session.port_id)
-            );
-            const associatedStation = associatedPort
-              ? stations.find((station) => station.id === associatedPort.station_id)
-              : undefined;
+          {filterAndSortSessions(sessions)
+            .slice(0, displayCount)
+            .map((session) => {
+              const associatedVehicle = vehicles.find(
+                (vehicle) => vehicle.id === session.vehicle_id
+              );
+              const associatedPort = ports.find(
+                (port) => port.id === Number(session.port_id)
+              );
+              const associatedStation = associatedPort
+                ? stations.find((station) => station.id === associatedPort.station_id)
+                : undefined;
 
-            return (
-              <ChargingSessionCard
-                key={session.id}
-                session={session}
-                associatedVehicle={associatedVehicle}
-                associatedStation={associatedStation}
-              />
-            );
-          })}
+              return (
+                <ChargingSessionCard
+                  key={session.id}
+                  session={session}
+                  associatedVehicle={associatedVehicle}
+                  associatedStation={associatedStation}
+                />
+              );
+            })}
 
-          {/* Add Load More button */}
-          {sessions.length > displayCount && (
+          {/* Update the Load More button to use filtered length */}
+          {filterAndSortSessions(sessions).length > displayCount && (
             <div className="flex justify-center mt-6">
               <button 
                 onClick={handleLoadMore}
                 className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
               >
-                Load More ({sessions.length - displayCount} remaining)
+                Load More ({filterAndSortSessions(sessions).length - displayCount} remaining)
               </button>
             </div>
           )}

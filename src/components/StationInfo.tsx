@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { AdminContent } from "./auth/AdminContent";
 import { UserContent } from "./auth/UserContent";
+import { Search } from "react-feather";
 
 interface Station {
   id: number;
@@ -37,6 +38,10 @@ interface StationInfoProps {
     label: string;
     isLoading?: boolean;
 }
+
+// Add these types after your existing interfaces
+type FilterOption = 'all' | 'active' | 'inactive' | 'maintenance';
+type SortOption = 'alphabetical' | 'availability' | 'ports';
 
 const StationCard = ({ station }: { station: Station }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -330,106 +335,178 @@ const StationCard = ({ station }: { station: Station }) => {
       </div>
 
       {/* Edit Station Dialog */}
-      <Dialog open={showEditStation} onOpenChange={setShowEditStation}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Station</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleUpdateStation} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium">Name</label>
-              <Input
-                value={editStationData.name}
-                onChange={(e) => setEditStationData({
-                  ...editStationData,
-                  name: e.target.value
-                })}
-                required
-              />
+      {showEditStation && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowEditStation(false);
+          }}
+        >
+          <div className="bg-[var(--cardblack)] p-6 rounded-lg w-full max-w-md border border-[var(--yellow)]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white">Edit Station</h2>
+              <button 
+                onClick={() => setShowEditStation(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium">Latitude</label>
-              <Input
-                type="number"
-                step="any"
-                value={editStationData.latitude}
-                onChange={(e) => setEditStationData({
-                  ...editStationData,
-                  latitude: parseFloat(e.target.value)
-                })}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Longitude</label>
-              <Input
-                type="number"
-                step="any"
-                value={editStationData.longitude}
-                onChange={(e) => setEditStationData({
-                  ...editStationData,
-                  longitude: parseFloat(e.target.value)
-                })}
-                required
-              />
-            </div>
-            <Button type="submit">Save Changes</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+            <form onSubmit={handleUpdateStation} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white">Name</label>
+                <Input
+                  value={editStationData.name}
+                  onChange={(e) => setEditStationData({
+                    ...editStationData,
+                    name: e.target.value
+                  })}
+                  required
+                  className="bg-gray-700 text-white border-[var(--yellow)]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white">Latitude</label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={editStationData.latitude}
+                  onChange={(e) => setEditStationData({
+                    ...editStationData,
+                    latitude: parseFloat(e.target.value)
+                  })}
+                  required
+                  className="bg-gray-700 text-white border-[var(--yellow)]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white">Longitude</label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={editStationData.longitude}
+                  onChange={(e) => setEditStationData({
+                    ...editStationData,
+                    longitude: parseFloat(e.target.value)
+                  })}
+                  required
+                  className="bg-gray-700 text-white border-[var(--yellow)]"
+                />
+              </div>
+              <Button 
+                type="submit"
+                className="w-full bg-[var(--yellow)] hover:bg-yellow-600 text-black"
+              >
+                Save Changes
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Edit Port Dialog */}
-      <Dialog open={showEditPort !== null} onOpenChange={() => setShowEditPort(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Port</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleUpdatePort} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium">Power (kW)</label>
-              <Input
-                type="number"
-                step="0.1"
-                value={editPortData?.power_kw}
-                onChange={(e) => setEditPortData(prev => 
-                  prev ? {...prev, power_kw: parseFloat(e.target.value)} : null
-                )}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Status</label>
-              <Select
-                value={editPortData?.status}
-                onValueChange={(value) => setEditPortData(prev => 
-                  prev ? {...prev, status: value as 'wolny' | 'zajety' | 'nieczynny'} : null
-                )}
+      {showEditPort !== null && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowEditPort(null);
+          }}
+        >
+          <div className="bg-[var(--cardblack)] p-6 rounded-lg w-full max-w-md border border-[var(--yellow)]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white">Edit Port</h2>
+              <button 
+                onClick={() => setShowEditPort(null)}
+                className="text-gray-400 hover:text-white"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="wolny">Wolny</SelectItem>
-                  <SelectItem value="zajety">Zajęty</SelectItem>
-                  <SelectItem value="nieczynny">Nieczynny</SelectItem>
-                </SelectContent>
-              </Select>
+                ✕
+              </button>
             </div>
-            <Button type="submit">Save Changes</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+            <form onSubmit={handleUpdatePort} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white">Power (kW)</label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={editPortData?.power_kw}
+                  onChange={(e) => setEditPortData(prev => 
+                    prev ? {...prev, power_kw: parseFloat(e.target.value)} : null
+                  )}
+                  required
+                  className="bg-gray-700 text-white border-[var(--yellow)]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white">Status</label>
+                <select
+                  value={editPortData?.status}
+                  onChange={(e) => setEditPortData(prev => 
+                    prev ? {...prev, status: e.target.value as 'wolny' | 'zajety' | 'nieczynny'} : null
+                  )}
+                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                >
+                  <option value="wolny">Wolny</option>
+                  <option value="zajety">Zajęty</option>
+                  <option value="nieczynny">Nieczynny</option>
+                </select>
+              </div>
+              <Button 
+                type="submit"
+                className="w-full bg-[var(--yellow)] hover:bg-yellow-600 text-black"
+              >
+                Save Changes
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+// Update the StationsInfo component
 export const StationsInfo = ({
     stations = [],
     label,
     isLoading = false,
 }: StationInfoProps) => {
-    const [displayCount, setDisplayCount] = useState(5); // Start with 5 stations
-    
+    const [displayCount, setDisplayCount] = useState(5);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterBy, setFilterBy] = useState<FilterOption>('all');
+    const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
+
+    // Add filter and sort function
+    const filterAndSortStations = useCallback((stationsToProcess: Station[]) => {
+        let filtered = stationsToProcess.filter(station => {
+            // Search filter
+            const matchesSearch = searchQuery === '' || 
+                station.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+            // Status filter with null check and type guard
+            const matchesFilter = filterBy === 'all' ? true :
+                station.status?.toLowerCase() === filterBy || 
+                (station.status && station.status.toLowerCase() === filterBy);
+
+            return matchesSearch && matchesFilter;
+        });
+
+        // Sort stations
+        return filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'alphabetical':
+                    return a.name.localeCompare(b.name);
+                case 'availability':
+                    // Sort by status with null checks
+                    if (!a.status && !b.status) return 0;
+                    if (!a.status) return 1;
+                    if (!b.status) return -1;
+                    return a.status === 'ACTIVE' ? -1 : b.status === 'ACTIVE' ? 1 : 0;
+                default:
+                    return 0;
+            }
+        });
+    }, [searchQuery, filterBy, sortBy]);
+
     // Move this inside the component
     const handleLoadMore = useCallback(() => {
         setDisplayCount(prevCount => {
@@ -462,21 +539,69 @@ export const StationsInfo = ({
     const remainingCount = stations.length - displayCount;
     const hasMore = remainingCount > 0;
 
+    // Update the return statement to include search and filters
     return (
-        <Card className="bg-[var(--cardblack)] w-[90%]">
+        <Card className="bg-[var(--cardblack)] w-[90%] border border-[var(--yellow)]">
             <CardHeader>
-                <p className="text-2xl font-semibold text-center text-white">
-                    {label}
-                </p>
+                <div className="flex flex-col gap-4">
+                    <p className="text-2xl font-semibold text-center text-white">
+                        {label}
+                    </p>
+                    
+                    {/* Search and Filters */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                        {/* Search Box */}
+                        <div className="relative flex-1">
+                            <Input
+                                type="text"
+                                placeholder="Search stations..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        </div>
+
+                        {/* Filter Dropdown */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Status:</span>
+                            <select
+                                value={filterBy}
+                                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                            >
+                                <option value="all">All Stations</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Sort by:</span>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                            >
+                                <option value="alphabetical">Alphabetical</option>
+                                <option value="availability">Availability</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {displayedStations.map((station) => (
-                        <StationCard key={station.id} station={station} />
-                    ))}
+                    {filterAndSortStations(stations)
+                        .slice(0, displayCount)
+                        .map((station) => (
+                            <StationCard key={station.id} station={station} />
+                        ))}
                 </div>
                 
-                {hasMore && (
+                {filterAndSortStations(stations).length > displayCount && (
                     <div className="flex justify-center mt-6">
                         <button 
                             onClick={handleLoadMore}
@@ -486,7 +611,7 @@ export const StationsInfo = ({
                             {isLoading ? (
                                 <span>Loading...</span>
                             ) : (
-                                <span>Load More ({remainingCount} remaining)</span>
+                                <span>Load More ({filterAndSortStations(stations).length - displayCount} remaining)</span>
                             )}
                         </button>
                     </div>
