@@ -1,12 +1,11 @@
-import Image from "next/image";
+"use client";
 
 import { Bebas_Neue } from "next/font/google";
 
-import { UserContent } from "@/components/auth/UserContent";
-import { AdminContent } from "@/components/auth/AdminContent";
 import { GuestContent } from "@/components/auth/GuestContent";
 import { Button } from "@/components/ui/button";
 import ClientMap from "@/components/ClientMap";
+import { Navbar } from "@/components/Navbar";
 
 const bebasNeue = Bebas_Neue({
   weight: "400"
@@ -14,61 +13,43 @@ const bebasNeue = Bebas_Neue({
 
 
 export default function Home() {
-  
-  
+
   return (
     <>
-        <nav className="flex justify-between p-2 bg-[rgba(14,13,13,0.9)] sticky top-0 z-[100] h-20">
-              <a href={"/"}>
-                <Image src={'Logo.svg'} alt="Logo EVolve" width={64} height={64}></Image>
-              </a>
-          <div className="flex items-center gap-8">
-            
-            <UserContent>
-              <>
-                <a href={'/client'} className="px-6 py-3 text-[var(--yellow)] text-xl font-semibold rounded-lg hover:bg-[var(--darkeryellow)] hover:text-white ">PROFIL</a>
-              </>
-            </UserContent>
-            <AdminContent>              
-            <>
-                <a href={'/admin'} className="px-6 py-3 text-[var(--yellow)] text-xl font-semibold rounded-lg hover:bg-[var(--darkeryellow)] hover:text-white ">PROFIL</a>
-              </>
-            </AdminContent>
-            <GuestContent>
-              <>
-                <a href={'/login'} className="px-6 py-3 text-[var(--yellow)] text-xl font-semibold rounded-lg hover:bg-[var(--darkeryellow)] hover:text-white ">ZALOGUJ SIĘ</a>
-                <a href={'/register'} className="px-6 py-3 bg-[var(--yellow)] text-xl font-semibold rounded-lg hover:bg-[var(--darkeryellow)]">ZAREJESTRUJ SIĘ</a>
-              </>
-            </GuestContent>
-          </div>
-        </nav>
+        <Navbar />
 
         <main className="bg-black">
             <div className="h-screen w-full bg-cover scale-x-[-1] opacity-50 mt-[-5rem]" style={{backgroundImage: "url('BackgroundImage.jpg')"}}></div>
             <div className="h-screen w-full opacity-15 absolute top-0 bg-[linear-gradient(90deg,_rgba(190,140,2,1)_0%,_rgba(0,212,255,0)_100%)]"></div>
-            <div className="h-screen w-full absolute top-0 pt-[17rem] p-16">
-              <div className="w-2/3 flex flex-col gap-8 animate-fadein">
-                <h1 className={`${bebasNeue.className} text-8xl `}>ŁADOWANIE JEDNYM <br /> KLIKNIĘCIEM</h1>
-                <p className="text-2xl w-[45ch] text-justify">Nasza aplikacja pozwala na ładowanie, ładowanie i ładowanie, Dzięki czemu jesteśmy najlepszą opcja na rynku. ALE to nie wszystko, ponieważ oferujemy również ładowanie!</p>
+            <div className="h-screen w-full absolute top-0 pt-[17rem] max-lg:pt-[10rem] p-16">
+              <div className="w-2/3 max-lg:w-full flex flex-col gap-8 animate-fadein">
+                <h1 className={`${bebasNeue.className} text-8xl max-lg:text-[4rem]`}>ŁADOWANIE JEDNYM <br /> KLIKNIĘCIEM</h1>
+                <p className="text-2xl w-[50%] max-lg:w-full max-lg:text-xl text-justify">Nasza aplikacja pozwala na ładowanie, ładowanie i ładowanie, Dzięki czemu jesteśmy najlepszą opcja na rynku. ALE to nie wszystko, ponieważ oferujemy również ładowanie!</p>
                 <GuestContent>
-                  <div className="flex flex-col w-1/2 gap-4">
-                    <a href={'/login'}>
-                      <Button className="px-6 py-3 bg-[var(--yellow)] text-xl font-semibold rounded-lg hover:bg-[var(--darkeryellow)] w-[18rem] h-16 hover:scale-[1.1] transition-transform">ZALOGUJ SIĘ
+                  <div className="flex flex-col w-1/2 max-lg:w-full gap-4">
+                    <a href={'/login'} className="max-lg:w-full">
+                      <Button className="px-6 py-3 bg-[var(--yellow)] text-xl max-lg:text-lg font-semibold 
+                        rounded-lg hover:bg-[var(--darkeryellow)] w-[18rem] max-lg:w-full h-16 
+                        hover:scale-[1.1] transition-transform">
+                        ZALOGUJ SIĘ
                       </Button>
                     </a>
-                    <a href={'/register'} className="">
-                      <button className="px-6 py-3 text-[var(--yellow)]   text-xl font-semibold hover:bg-[var(--darkeryellow)]  hover:text-white rounded-lg w-[18rem] h-16 
-                      border-[var(--yellow)] border-[5px] hover:border-0 hover:scale-[1.1] transition-transform">ZAREJESTRUJ SIĘ</button>
+                    <a href={'/register'} className="max-lg:w-full">
+                      <button className="px-6 py-3 text-[var(--yellow)] text-xl max-lg:text-lg 
+                        font-semibold hover:bg-[var(--darkeryellow)] hover:text-white rounded-lg 
+                        w-[18rem] max-lg:w-full h-16 border-[var(--yellow)] border-[5px] 
+                        hover:border-0 hover:scale-[1.1] transition-transform">
+                        ZAREJESTRUJ SIĘ
+                      </button>
                     </a>
                   </div>
                 </GuestContent>
               </div>
             </div>
         </main>
-                    
 
-        <section className="text-center">
-          <a href="/stations"className={`${bebasNeue.className} text-5xl text-center my-4`}>NASZE PUNKTY ŁADOWANIA</a>
+        <section className="text-center my-8">
+          <a href="/stations" className={`${bebasNeue.className} text-6xl text-center my-4`}>NASZE PUNKTY ŁADOWANIA</a>
         </section>
         <ClientMap/>
     </>

@@ -4,10 +4,16 @@ import Logo from "@/components/Logo";
 const AuthErrorPage = () => {
     return (
         <>  
-            <Logo></Logo>
+            <div className="absolute top-4 left-4 z-10">
+                <Logo />
+            </div>
 
-            <div className="grid place-items-center bg-[var(--black)] h-screen">
-                <main className="p-8 bg-[var(--cardblack)] rounded-lg w-[50%] h-[50%] flex flex-col justify-around items-center" >
+            <div className="grid place-items-center bg-[var(--black)] min-h-screen p-4">
+                <main className="p-4 md:p-8 bg-[var(--cardblack)] rounded-lg 
+                    w-[95%] md:w-[70%] lg:w-[50%] 
+                    min-h-[400px] md:min-h-[450px] 
+                    flex flex-col justify-around items-center"
+                >
                     <ErrorCard />                
                 </main>
             </div>

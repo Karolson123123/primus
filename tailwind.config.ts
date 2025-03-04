@@ -70,7 +70,7 @@ const config = {
         "display-content": {
           from: { opacity: "0" }, 
           to: { opacity: "1" },
-          },
+        },
         "display-from-top": {
           from: { 
             transform: "translateY(-10%)",
@@ -80,13 +80,35 @@ const config = {
             transform: "translateY(0)",
             opacity: "1"
            },
-        }
+        },
+        "fade-in-right": {
+          from: { 
+            transform: "translateX(100%)",
+            opacity: "0"
+          },
+          to: { 
+            transform: "translateX(0)",
+            opacity: "1"
+          },
+        },
+        "fade-out-right": {
+          from: { 
+            transform: "translateX(0)",
+            opacity: "1"
+          },
+          to: { 
+            transform: "translateX(100%)",
+            opacity: "0"
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "display-content": "display-content 0.2s ease-out",
         "display-from-top": "display-from-top 0.2s ease-out",
+        "fade-in-right": "fade-in-right 0.3s ease-out",
+        "fade-out-right": "fade-out-right 0.3s ease-in forwards",
       },
     },
   },

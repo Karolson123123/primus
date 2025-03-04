@@ -224,9 +224,9 @@ const StationCard = ({ station }: { station: Station }) => {
       </div>
 
       <div className={`transition-all duration-300 ease-in-out ${
-        showDetails ? "max-h-[500px] opacity-100 overflow-y-auto" : "max-h-0 opacity-0"
+        showDetails ? "opacity-100" : "max-h-0 opacity-0 overflow-hidden"
       }`}>
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 space-y-4 overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Charging Ports</h3>
             <AdminContent>
@@ -241,7 +241,7 @@ const StationCard = ({ station }: { station: Station }) => {
               </button>
             </AdminContent>
           </div>
-          <div className="grid grid-cols-2 gap-4 overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4 overflow-hidden">
             {ports.map((port, index) => (
               <div 
                 key={port.id}
@@ -315,7 +315,7 @@ const StationCard = ({ station }: { station: Station }) => {
             <UserContent>
               <button
                 onClick={(e) => handleChargingStart(e, selectedPort!)}
-                className={`w-full py-4 transition-colors rounded-xl text-xl font-semibold ${
+                className={`w-full py-4 mt-4 transition-colors rounded-xl text-xl font-semibold ${
                   selectedPort 
                     ? 'bg-[var(--yellow)] hover:bg-yellow-600' 
                     : 'bg-gray-600 cursor-not-allowed'

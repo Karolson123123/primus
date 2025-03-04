@@ -11,6 +11,8 @@ import useGeoLocation from '@/lib/geo-location';
 import { getPortsInfo } from '@/data/ports';
 import SearchBox from './SearchBox';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { MarkerCluster } from 'leaflet';
 
 interface Station {
     id: number;
@@ -29,11 +31,38 @@ interface Port {
     station_id: Station['id'];
 }
 
-interface MapProps {
-  height?: string;
+// Add new interface for station info styling
+interface StationInfoStyles {
+  containerWidth?: string;
+  position?: 'left' | 'right';
+  maxHeight?: string;
+  background?: string;
+  textColor?: string;
+  borderRadius?: string;
+  shadow?: string;
+  phoneStyles?: {
+    width?: string;
+    height?: string;
+    padding?: string;
+    margin?: string;
+  };
+}
+
+// Add new interface for search box styling
+interface SearchBoxStyles {
   width?: string;
+  position?: 'top-left' | 'top-right' | 'top-center';
+  margin?: string;
+}
+
+// Update MapProps interface
+interface MapProps {
+  width?: string;
+  searchboxWidth?: string;
   selectedStationId?: string;
-  onStationAndPortSelect?: (stationData: any, portData: any) => void;
+  containerHeight?: string;
+  stationInfoStyles?: StationInfoStyles;
+  searchBoxStyles?: SearchBoxStyles;
 }
 
 const icon = L.icon({
@@ -77,7 +106,7 @@ const selectedIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-const createClusterCustomIcon = (cluster: any) => {
+const createClusterCustomIcon = (cluster: MarkerCluster) => {
     const count = cluster.getChildCount();
     let size = 40;
     let color = 'var(--yellow)'; 
@@ -125,11 +154,13 @@ function LocationUpdater({ position }: { position: LatLngTuple }) {
 // Add at the top of the file or near other interfaces
 interface SearchBoxWithMapProps {
     stations: Station[];
-    width: string;
+    width?: string;
     setActiveMarker: (index: number | null) => void;
+    styles?: SearchBoxStyles;
 }
 
-function SearchBoxWithMap({ stations, width, setActiveMarker }: SearchBoxWithMapProps) {
+// Update SearchBoxWithMap function to accept styles
+function SearchBoxWithMap({ stations, setActiveMarker, styles }: SearchBoxWithMapProps) {
     const map = useMap();
     const [searchMarker, setSearchMarker] = useState<L.Marker | null>(null);
 
@@ -155,11 +186,23 @@ function SearchBoxWithMap({ stations, width, setActiveMarker }: SearchBoxWithMap
     };
 
     return (
-        <SearchBox 
-            stations={stations} 
-            width={width}
-            onStationSelect={handleStationSelect}
-        />
+        <div className={`
+      absolute z-[999] -translate-x-[50%] top-[-6] left-[140]
+      w-full max-w-[315px]
+      max-lg:w-[70%]
+      transition-all
+      max-lg:left-[130]      
+
+    `}
+    style={{
+      margin: styles?.margin || '0.5rem'
+    }}>
+      <SearchBox
+        stations={stations}
+        width="100%"
+        onStationSelect={handleStationSelect}
+      />
+    </div>
     );
 }
 
@@ -178,7 +221,22 @@ const WORLD_BOUNDS: L.LatLngBoundsLiteral = [
     [90, 180]    // Northeast coordinates
 ];
 
-export default function Map({ height = "800px", width = "100%", selectedStationId }: MapProps) {
+export default function Map({  
+  width = "100%", 
+  selectedStationId,
+  containerHeight = "90vh",
+  searchboxWidth = "",
+  stationInfoStyles = {
+    containerWidth: "",
+    position: "right",
+    maxHeight: "",
+    background: "var(--background)",
+    textColor: "white",
+    borderRadius: "0.5rem",
+    shadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+  },
+  searchBoxStyles
+}: MapProps) {
     const router = useRouter();
     const [stations, setStations] = useState<Station[]>([]);
     const [ports, setPorts] = useState<Port[]>([]);
@@ -224,8 +282,10 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
     
 
     const center: LatLngTuple = useMemo(() => {
-        if (location.loaded && !location.error && location.coordinates) {
-            return [location.coordinates.lat, location.coordinates.lng];
+        if (location.loaded && location.coordinates) {
+            // if (!location.error) {
+            return [Number(location.coordinates.lat), Number(location.coordinates.lng)];
+            // }
         }
         return [50.06143, 19.93658];
     }, [location]);
@@ -233,12 +293,12 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
 
 
     return (
-        <div className="relative">
+        <div className="relative" style={{ height: containerHeight }}>
             <MapContainer
                 center={center}
                 zoom={13}
                 scrollWheelZoom={true}
-                style={{ height, width, zIndex: "0" }}
+                style={{ height: "100%", width, zIndex: "0" }}
                 maxZoom={MAX_ZOOM}
                 minZoom={MIN_ZOOM}
                 doubleClickZoom={true}
@@ -253,13 +313,14 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
                 />
                 <SearchBoxWithMap 
                     stations={stations} 
-                    width="400px"
+                    width={searchboxWidth}
                     setActiveMarker={setActiveMarker}
+                    styles={searchBoxStyles}
                 />
-                {location.loaded && !location.error && location.coordinates && (
+                {location.loaded /* && !location.error */ && location.coordinates && (
                     <Marker 
                         icon={locationIcon} 
-                        position={[location.coordinates.lat, location.coordinates.lng]}
+                        position={[Number(location.coordinates.lat), Number(location.coordinates.lng)]}
                     >
                         <Popup 
                             offset={[10,-20]} 
@@ -304,13 +365,24 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
             {stations.map((station, index) => (
                 <div 
                     key={`popup-${index}`}
-                    className={`absolute top-[50%] right-4 transform -translate-y-1/2 ${
-                        activeMarker === index ? 'block' : 'hidden'
-                    }`}
-                    style={{ zIndex: 1000 , height: "95%" , width: "300px" }}
+                    className={`absolute top-[50%] max-lg:top-32 h-[96%] w-[400px] max-lg:w-full max-lg:h-[90px]
+                                transform -translate-y-1/2 right-4 max-lg:right-0
+                                ${activeMarker === index ? 'block max-lg:flex' : 'hidden'}
+                                `}
+                    style={{ 
+                        zIndex: 2,
+                        pointerEvents: 'none'
+                    }}
                 >
                         <div 
-                        className='relative text-center h-full w-full flex flex-col items-center justify-start bg-[var(--background)] rounded-lg shadow-lg text-white'
+                        className='relative text-center h-full w-full max-lg:w-full max-lg:h-[750%] flex flex-col items-center justify-center'
+                        style={{
+                            backgroundColor: stationInfoStyles.background,
+                            color: stationInfoStyles.textColor,
+                            borderRadius: stationInfoStyles.borderRadius,
+                            boxShadow: stationInfoStyles.shadow,
+                            pointerEvents: 'auto'
+                        }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -334,20 +406,22 @@ export default function Map({ height = "800px", width = "100%", selectedStationI
                                 />
                             </svg>   
                         </button>    
-                        <main className='w-[95%] h-[90%] flex gap-4 items-center flex-col p-6 text-4xl z-[2] overflow-y-auto mt-3'>
+                        <main className='w-[95%] h-[90%] flex gap-4 items-center flex-col p-6 text-4xl  z-[2] overflow-y-auto mt-3'>
                             <div className='bg-[var(--cardblack)] rounded-3xl w-full'>
                                 {/* Updated station name to include the city name if available */}
-                                <h1 className='font-semibold text-4xl p-7'>
+                                <h1 className='font-semibold text-4xl p-7 max-lg:text-2xl'>
                                     {station.name}
                                 </h1>
                             </div>
-                            <section className='bg-[var(--cardblack)]  text-2xl flex flex-col items-center gap-4 h-fit w-full justify-center p-7 rounded-3xl' onClick={(e) => e.currentTarget.nextElementSibling.classList.toggle('hidden')} >
+                            <section className='bg-[var(--cardblack)]  text-2xl flex flex-col items-center gap-4 h-fit w-full justify-center p-7 rounded-3xl max-lg:text-' onClick={(e) => {
+                                if (e.currentTarget.nextElementSibling !== null) {
+                                    e.currentTarget.nextElementSibling.classList.toggle('hidden')
+                                }}}>
                                 Dostępne porty ładowania:
                             <div className='flex items-center gap-4 text-4xl'>
-                                <img src="/EV-charger.png" alt="EV charger port" className='w-20 h-20'/>
-                                <div className="flex items-center gap-1 text-4xl">  
-                                                                      
-                                         {ports.filter(port => port.station_id === station. id && port.status === 'wolny').length}/{ports.filter(port => port.station_id === station. id).length}                                 
+                                <Image src="/EV-charger.png" alt="EV charger port" width={80} height={80} />
+                                <div className="flex items-center gap-1 text-4xl">
+                                         {ports.filter(port => port.station_id === station. id && port.status === 'wolny').length}/{ports.filter(port => port.station_id === station. id).length}
                                 </div>
                             </div>    
                                     

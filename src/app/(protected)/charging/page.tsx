@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getVehicles } from '@/data/vehicles';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -11,7 +11,6 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { updateSessionState } from '@/data/charging-session';
 import { startNewChargingSession, stopCurrentChargingSession } from '@/actions/charging-actions';
 import { toast } from "sonner";
-import { updatePortStatus } from '@/data/ports';
 import { useRouter } from "next/navigation";
 import { getActiveChargingSession } from '@/data/charging-session';
 
@@ -20,9 +19,9 @@ interface Vehicle {
   id: number;
   license_plate: string;
   brand: string;
-  battery_capacity_kwh: number;  // Changed from battery_capacity_kWh
+  battery_capacity_kwh: number;
   battery_condition: number;
-  max_charging_powerkwh: number; // Changed from max_charging_powerkWh
+  max_charging_powerkwh: number;
   created_at: string;
   user_id: number;
   current_battery_capacity_kw: number;
@@ -34,22 +33,28 @@ interface ChargingSessionData {
   start_time: string;
   duration_minutes: number;
   energy_used_kwh: number;
-  total_cost: number;  // Ensure this exists
+  total_cost: number;
   status: 'IN_PROGRESS' | 'COMPLETED';
-  user_id?: number; // Add this optional field
+  user_id?: number;
 }
 
 interface ChargingSession {
   id: number;
   vehicle_id: number;
   port_id: number;
-  user_id: number;
+  user_id?: number;
   start_time: string;
-  end_time: string | null;
-  duration_minutes: number;
+  end_time?: string | null;
+  duration_minutes?: number;
   energy_used_kwh: number;
   total_cost: number;
   status: 'IN_PROGRESS' | 'COMPLETED';
+}
+
+interface Port {
+  id: number | null,
+  power_kw: number | null,
+  number: number | null
 }
 
 // Constants
@@ -61,7 +66,7 @@ const calculateEnergyUsed = (batteryCapacity: number, currentCapacity: number, p
   return Math.min(energyUsed, batteryCapacity);
 };
 
-const calculateTimeFromPercentage = (selectedVehicle: Vehicle | null, selectedPort: any, targetPercentage: number): number => {
+const calculateTimeFromPercentage = (selectedVehicle: Vehicle | null, selectedPort: Port, targetPercentage: number): number => {
   if (!selectedVehicle || !selectedPort) return 0;
 
   const currentPercent = (selectedVehicle.current_battery_capacity_kw / selectedVehicle.battery_capacity_kwh) * 100;
@@ -73,11 +78,11 @@ const calculateTimeFromPercentage = (selectedVehicle: Vehicle | null, selectedPo
 };
 
 // Add this constant at the top of the file
-const calculateEnergy = (power: number, timeMinutes: number): number => {
-  const timeHours = timeMinutes / 60;
-  const energyKWh = power * timeHours;
-  return Number(energyKWh.toFixed(2));
-};
+// const calculateEnergy = (power: number, timeMinutes: number): number => {
+//   const timeHours = timeMinutes / 60;
+//   const energyKWh = power * timeHours;
+//   return Number(energyKWh.toFixed(2));
+// };
 
 const calculateTimeFromEnergy = (energy: number, power: number): number => {
   const timeHours = energy / power;
@@ -102,9 +107,9 @@ const calculateCost = (energyKWh: number): number => {
   return Number((energyKWh * COST_PER_KWH).toFixed(2));
 };
 
-const calculateEnergyFromCost = (cost: number): number => {
-  return Number((cost / COST_PER_KWH).toFixed(2));
-};
+// const calculateEnergyFromCost = (cost: number): number => {
+//   return Number((cost / COST_PER_KWH).toFixed(2));
+// };
 
 // Add with other helper functions
 const updateCurrentCost = (energyUsed: number): number => {
@@ -135,7 +140,7 @@ export default function ChargingPage() {
   const [sessionResult, setSessionResult] = useState<ChargingSession | null>(null);
 
   // URL params handling
-  const stationId = searchParams.get('station');
+  const stationId = searchParams.get('station') ?? "";
   const portId = searchParams.get('port');
   const powerKw = searchParams.get('power');
   const portNumber = searchParams.get('portNumber');
@@ -206,13 +211,73 @@ export default function ChargingPage() {
     fetchVehicles();
   }, []);
 
+  const handleStopCharging = async () => {
+    if (!sessionResult?.id || !selectedVehicle?.id) {
+        setError('No active session or vehicle to stop.');
+        return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+        // Clear all intervals first
+        if (intervalId) {
+            clearInterval(intervalId);
+            setIntervalId(null);
+        }
+
+        const energyUsed = Math.max(0, currentCapacityKWh - selectedVehicle.current_battery_capacity_kw);
+        const finalCost = Math.max(0, currentCost);
+
+        // Do one final state update before stopping
+        await updateSessionState(sessionResult.id, {
+            energy_used_kwh: energyUsed,
+            current_battery_level: currentBatteryLevel,
+            total_cost: finalCost
+        });
+
+        const result = await stopCurrentChargingSession(
+            sessionResult.id,
+            selectedVehicle.id,
+            currentCapacityKWh,
+            energyUsed,
+            finalCost
+        );
+
+        if (result) {
+            // Clear session state immediately
+            setIsCharging(false);
+            setRemainingTime(0);
+            
+            // Show success toast with payment option
+            toast.success("Charging Complete", {
+                description: `Final cost: ${finalCost.toFixed(2)} PLN | Energy used: ${energyUsed.toFixed(2)} kWh`,
+                duration: 50000,
+                action: {
+                    label: "Go to Payment",
+                    onClick: () => router.push(`/payment?sessionId=${sessionResult.id}&amount=${finalCost}`)
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Failed to stop charging:', error);
+        toast.error("Failed to stop charging", {
+            description: error instanceof Error ? error.message : 'Please try again'
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
+};
+
+const cachedHandleStopCharging = useCallback(handleStopCharging, [currentBatteryLevel, currentCapacityKWh, currentCost, intervalId, router, selectedVehicle, sessionResult]);
+
   useEffect(() => {
     if (isCharging && remainingTime > 0) {
       const interval = setInterval(() => {
         setRemainingTime(prev => {
           if (prev <= 1) {
             // Auto stop the charging when time runs out
-            handleStopCharging();
+            cachedHandleStopCharging();
             return 0;
           }
           return prev - 1;
@@ -225,7 +290,7 @@ export default function ChargingPage() {
         if (interval) clearInterval(interval);
       };
     }
-  }, [isCharging, remainingTime]);
+  }, [isCharging, remainingTime, cachedHandleStopCharging]);
 
   // Add new effect to handle auto-stop conditions
   useEffect(() => {
@@ -248,7 +313,7 @@ export default function ChargingPage() {
       if (shouldStopCharging()) {
         // Use setTimeout to avoid state updates during render
         setTimeout(() => {
-          handleStopCharging();
+          cachedHandleStopCharging();
           toast.success("Charging Complete", {
             description: "Target battery level reached",
             duration: 5000,
@@ -266,7 +331,10 @@ export default function ChargingPage() {
     currentCapacityKWh,
     selectedVehicle?.battery_capacity_kwh,
     chargeMode,
-    targetPercentage
+    targetPercentage,
+    cachedHandleStopCharging,
+    router,
+    selectedVehicle
   ]);
 
   // Remove auto-stop from battery update effect
@@ -277,23 +345,24 @@ export default function ChargingPage() {
         selectedVehicle?.max_charging_powerkwh || 0
       );
       const increasePerSecondKWh = maxPowerKW / 3600;
-      
-      const batteryInterval = setInterval(() => {
-        setCurrentCapacityKWh((prev) => {
-          const newCapacity = Math.min(
-            selectedVehicle.battery_capacity_kwh,
-            prev + increasePerSecondKWh
-          );
-          
-          const energyUsed = newCapacity - selectedVehicle.current_battery_capacity_kw;
-          const newCost = calculateCost(energyUsed);
-          setCurrentCost(newCost);
+      if (selectedVehicle !== null) {
+        const batteryInterval = setInterval(() => {
+          setCurrentCapacityKWh((prev) => {
+            const newCapacity = Math.min(
+              selectedVehicle.battery_capacity_kwh,
+              prev + increasePerSecondKWh
+            );
+            
+            const energyUsed = newCapacity - selectedVehicle.current_battery_capacity_kw;
+            const newCost = calculateCost(energyUsed);
+            setCurrentCost(newCost);
 
-          return Number(newCapacity.toFixed(4));
-        });
-      }, 1000);
+            return Number(newCapacity.toFixed(4));
+          });
+        }, 1000);
 
-      return () => clearInterval(batteryInterval);
+        return () => clearInterval(batteryInterval);
+      }
     }
   }, [isCharging, remainingTime, selectedPort.power_kw, selectedVehicle]);
 
@@ -385,7 +454,7 @@ export default function ChargingPage() {
           start_time: new Date().toISOString(),
           duration_minutes: calculatedTime,
           energy_used_kwh: 0,
-          total_cost: cost, // Use the exact cost input
+          total_cost: cost,
           status: 'IN_PROGRESS'
         };
   
@@ -414,78 +483,22 @@ export default function ChargingPage() {
   };
 
   // Add this helper function to validate session response
-  function isValidChargingSession(session: any): session is ChargingSession {
-    return (
-      session &&
-      typeof session === 'object' &&
-      typeof session.id === 'number' &&
-      typeof session.vehicle_id === 'number' &&
-      typeof session.port_id === 'number' &&
-      typeof session.start_time === 'string' &&
-      (session.end_time === null || typeof session.end_time === 'string') &&
-      typeof session.energy_used_kwh === 'number' &&
-      typeof session.total_cost === 'number' &&
-      (session.status === 'IN_PROGRESS' || session.status === 'COMPLETED')
-    );
-  }
+  // function isValidChargingSession(session: ChargingSession): session is ChargingSession {
+  //   return (
+  //     session &&
+  //     typeof session === 'object' &&
+  //     typeof session.id === 'number' &&
+  //     typeof session.vehicle_id === 'number' &&
+  //     typeof session.port_id === 'number' &&
+  //     typeof session.start_time === 'string' &&
+  //     (session.end_time === null || typeof session.end_time === 'string') &&
+  //     typeof session.energy_used_kwh === 'number' &&
+  //     typeof session.total_cost === 'number' &&
+  //     (session.status === 'IN_PROGRESS' || session.status === 'COMPLETED')
+  //   );
+  // }
 
-  const handleStopCharging = async () => {
-    if (!sessionResult?.id || !selectedVehicle?.id) {
-        setError('No active session or vehicle to stop.');
-        return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-        // Clear all intervals first
-        if (intervalId) {
-            clearInterval(intervalId);
-            setIntervalId(null);
-        }
-
-        const energyUsed = Math.max(0, currentCapacityKWh - selectedVehicle.current_battery_capacity_kw);
-        const finalCost = Math.max(0, currentCost);
-
-        // Do one final state update before stopping
-        await updateSessionState(sessionResult.id, {
-            energy_used_kwh: energyUsed,
-            current_battery_level: currentBatteryLevel,
-            total_cost: finalCost
-        });
-
-        const result = await stopCurrentChargingSession(
-            sessionResult.id,
-            selectedVehicle.id,
-            currentCapacityKWh,
-            energyUsed,
-            finalCost
-        );
-
-        if (result) {
-            // Clear session state immediately
-            setIsCharging(false);
-            setRemainingTime(0);
-            
-            // Show success toast with payment option
-            toast.success("Charging Complete", {
-                description: `Final cost: ${finalCost.toFixed(2)} PLN | Energy used: ${energyUsed.toFixed(2)} kWh`,
-                duration: 50000,
-                action: {
-                    label: "Go to Payment",
-                    onClick: () => router.push(`/payment?sessionId=${sessionResult.id}&amount=${finalCost}`)
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Failed to stop charging:', error);
-        toast.error("Failed to stop charging", {
-            description: error instanceof Error ? error.message : 'Please try again'
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
-};
+  
 
 // Add this new effect to update cost when percentage changes
 useEffect(() => {
@@ -521,7 +534,7 @@ useEffect(() => {
     
     setDuration(timeMinutes);
   }
-}, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh]);
+}, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh, selectedPort, selectedVehicle]);
 
 useEffect(() => {
   if (chargeMode === 'cost' && selectedVehicle && selectedPort) {
@@ -531,7 +544,7 @@ useEffect(() => {
     setDuration(timeNeededMinutes);
     // Remove the cost verification and update
   }
-}, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh]);
+}, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh, selectedPort, selectedVehicle]);
 
 useEffect(() => {
   if (chargeMode === 'percentage' && selectedVehicle && selectedPort) {
@@ -570,7 +583,7 @@ useEffect(() => {
     const timeNeededMinutes = Math.ceil((actualEnergy / chargingPowerKW) * 60);
     setDuration(timeNeededMinutes);
   }
-}, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle]);
+}, [cost, chargeMode, selectedPort?.power_kw, selectedVehicle, selectedPort]);
 
 useEffect(() => {
   if (chargeMode === 'percentage' && selectedVehicle && selectedPort) {
@@ -586,7 +599,7 @@ useEffect(() => {
 }, [chargeMode, targetPercentage, selectedVehicle, selectedPort]);
 
   useEffect(() => {
-  if (isCharging && sessionResult?.id) {
+  if (isCharging && sessionResult?.id && selectedVehicle) {
     const syncInterval = setInterval(() => {
       // Calculate energy used
       const energyUsed = calculateEnergyUsed(
@@ -614,7 +627,7 @@ useEffect(() => {
 }, [isCharging, sessionResult?.id, currentBatteryLevel, selectedVehicle]);
 
   useEffect(() => {
-  if (isCharging && sessionResult?.id) {
+  if (isCharging && sessionResult?.id && selectedVehicle) {
     const syncInterval = setInterval(() => {
       // Calculate energy used
       const energyUsed = calculateEnergyUsed(selectedVehicle.battery_capacity_kwh, selectedVehicle.battery_condition * 100, currentBatteryLevel);
@@ -632,10 +645,10 @@ useEffect(() => {
 
     return () => clearInterval(syncInterval);
   }
-}, [isCharging, sessionResult?.id, currentBatteryLevel]);
+}, [isCharging, sessionResult?.id, currentBatteryLevel, selectedVehicle]);
 
 useEffect(() => {
-    if (isCharging && sessionResult?.id) {
+    if (isCharging && sessionResult?.id && selectedVehicle) {
         const syncInterval = setInterval(() => {
             const energyUsed = currentCapacityKWh - selectedVehicle.current_battery_capacity_kw;
             
@@ -654,11 +667,11 @@ useEffect(() => {
 
 // Add a shorter interval for UI updates
 useEffect(() => {
-  if (isCharging && sessionResult?.id) {
+  if (isCharging && sessionResult?.id && selectedVehicle) {
     const uiUpdateInterval = setInterval(async () => {
       try {
         const sessionUpdateData = {
-          energy_used_kwh: Math.max(0, Number((currentCapacityKWh - selectedVehicle?.current_battery_capacity_kw) || 0)),
+          energy_used_kwh: Math.max(0, Number((currentCapacityKWh - selectedVehicle.current_battery_capacity_kw) || 0)),
           current_battery_level: Math.max(0, Number(currentBatteryLevel || 0)),
           total_cost: Math.max(0, Number(currentCost || 0))
         };
@@ -675,10 +688,10 @@ useEffect(() => {
 
 // Keep the server sync interval at a longer duration
 useEffect(() => {
-  if (isCharging && sessionResult?.id) {
+  if (isCharging && sessionResult?.id && selectedVehicle) {
     const serverSyncInterval = setInterval(() => {
       const sessionUpdateData = {
-        energy_used_kwh: Math.max(0, Number((currentCapacityKWh - selectedVehicle?.current_battery_capacity_kw) || 0)),
+        energy_used_kwh: Math.max(0, Number((currentCapacityKWh - selectedVehicle.current_battery_capacity_kw) || 0)),
         current_battery_level: Math.max(0, Number(currentBatteryLevel || 0)),
         total_cost: Math.max(0, Number(currentCost || 0))
       };
@@ -695,7 +708,7 @@ useEffect(() => {
 
 // Replace the existing effect with this corrected version
 useEffect(() => {
-  if (isCharging && sessionResult?.id) {
+  if (isCharging && sessionResult?.id && selectedVehicle) {
     const syncInterval = setInterval(() => {
       try {
         // Calculate energy used correctly
@@ -805,7 +818,7 @@ useEffect(() => {
     // Update cost state with 2 decimal places
     setCost(Number(estimatedCost.toFixed(2)));
   }
-}, [duration, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh]);
+}, [duration, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh, selectedPort, selectedVehicle]);
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -920,17 +933,24 @@ useEffect(() => {
           {/* Display Map Component when showMap is true */}
           {showMap && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-              <div className="relative p-8 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)]  w-[95%] h-[85%] z-[1000000000]">
+              <div className="relative w-[95%] h-[85%] max-lg:w-full max-lg:h-full max-lg:rounded-none p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)] z-[1000000000]">
                 {/* X button to close the modal */}
                 <button
                   onClick={() => setShowMap(false)}
-                  className="absolute top-2 right-2 text-white text-xl"
+                  className="absolute top-4 right-4 text-black text-xl z-[1000000001]"
                 >
                   &times;
                 </button>
                 {/* Map Component */}
-                <div className="h-full w-full">
-                  <Map height='700px' selectedStationId={stationInfo.id}></Map>
+                <div className="w-full h-full">
+                  <Map 
+                    containerHeight="100%" 
+                    selectedStationId={stationInfo.id}
+                    searchBoxStyles={{
+                      className: "absolute z-[999] w-[90%] max-w-[315px] left-1/2 -translate-x-1/2 top-4 transition-all",
+                      containerClassName: "w-full"
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -955,7 +975,7 @@ useEffect(() => {
           )}
           {/* Charging Options Form Container */}
           {selectedVehicle && (
-            <div className="p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)] ">
+            <div className="p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)]">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <fieldset className="space-x-4">
                   <legend className="m-2 text-md font-medium text-gray-300">Charging Options</legend>
@@ -1119,17 +1139,8 @@ useEffect(() => {
                       <p>Charging Session {isCharging ? 'In Progress' : 'Completed'}</p>
                       <p>Session ID: {sessionResult.id}</p>
                       {isCharging && (
-                        <>
                           <p className="mt-2">
-                            Time Remaining: {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, '0')}
                           </p>
-                          <p className="mt-2">
-                            Energy Used: {((currentCapacityKWh - selectedVehicle?.current_battery_capacity_kw) || 0).toFixed(2)} kWh
-                          </p>
-                          <p className="mt-2 text-yellow-500">
-                            Current Cost: {(currentCost || 0).toFixed(2)} PLN
-                          </p>
-                        </>
                       )}
                       {/* Add payment button for completed sessions */}
                       {!isCharging && (
@@ -1141,7 +1152,9 @@ useEffect(() => {
                         </Button>
                       )}
                     </div>
+                    
                   )}
+                  
                 </div>
               </form>
             </div>

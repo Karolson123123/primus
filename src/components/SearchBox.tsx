@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+
 import { ListItemText } from "@mui/material";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -51,14 +51,7 @@ export default function SearchBox({ stations, width = '300px', onStationSelect }
                         placeholder="Search stations..."
                     />
                 </div>
-                <div>
-                    <Button className="bg-[var(--background)] rounded-[1rem] h-[3.4rem]">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </Button>
-                </div>
+                
             </div>
             {showResults && searchTerm && (
                 <div className="absolute top-full mt-1 w-full max-h-60 overflow-y-auto bg-[var(--background)] rounded-lg shadow-lg z-[100000]">

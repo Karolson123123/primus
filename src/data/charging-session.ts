@@ -9,7 +9,7 @@ export interface Vehicle {
   id: number;
   license_plate: string;
   brand: string;
-  battery_capacity_kwh: number;  // Changed from battery_capacity_kWh
+  battery_capacity_kwh: number;
   battery_condition: number;
   max_charging_powerkwh: number;
   created_at: string;
@@ -20,10 +20,10 @@ export interface Vehicle {
 export interface ChargingSessionData {
   vehicle_id: number;
   port_id: number;
-  start_time?: string;  // Make optional since server sets it
+  start_time?: string;
   duration_minutes: number;
-  energy_used_kwh?: number;  // Make optional with default 0
-  total_cost?: number;  // Make optional with default 0
+  energy_used_kwh?: number;
+  total_cost?: number;
   status?: 'IN_PROGRESS' | 'COMPLETED';
 }
 
@@ -33,19 +33,20 @@ export interface ChargingSession {
   port_id: number;
   start_time: string;
   end_time?: string;
-  energy_used_kwh: number;  // Correct lowercase naming
+  energy_used_kwh: number;
   total_cost: number;
   status: 'IN_PROGRESS' | 'COMPLETED';
-  payment_status: 'PENDING' | 'COMPLETED' | 'FAILED';  // Add this line
+  payment_status: 'PENDING' | 'COMPLETED' | 'FAILED';
   duration_minutes?: number;
-  current_battery_capacity_kw?: number; // Add this field
+  current_battery_capacity_kw?: number;
 }
 
 export interface SessionUpdate {
   energy_used_kwh: number;
   total_cost: number;
-  current_battery_capacity_kw: number;
-  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED';  // Add this line
+  current_battery_capacity_kw?: number;
+  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED';
+  current_battery_level?: number;
 }
 
 export const getChargingSessionsInfo = async (): Promise<ChargingSession[] | null> => {
@@ -114,7 +115,7 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
     let responseData;
     try {
       responseData = await response.json();
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse server response:', {
         status: response.status,
         statusText: response.statusText,
@@ -160,7 +161,6 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
       port_id: Number(payload.port_id),
       start_time: responseData.start_time || new Date().toISOString(),
       duration_minutes: Number(payload.duration_minutes),
-      end_time: null,
       energy_used_kwh: Number(responseData.energy_used_kwh || 0),
       total_cost: Number(payload.total_cost), // Use the cost from payload
       status: 'IN_PROGRESS',
@@ -264,7 +264,7 @@ export const updateVehicleCapacityAndStopSession = async (
     if (sessionData.status !== 'COMPLETED') {
       // Calculate actual energy used and cost
       const actualEnergyUsed = Math.max(0, energyUsed);
-      const actualCost = Math.max(0, finalCost || calculateCost(actualEnergyUsed));
+      const actualCost = Math.max(0, finalCost);
 
       const stopPayload = {
         current_battery_capacity_kw: newCapacity,
@@ -303,7 +303,7 @@ export const updateVehicleCapacityAndStopSession = async (
         total_cost: actualCost,
         current_battery_capacity_kw: newCapacity,
         status: 'COMPLETED' as const,
-        payment_status: 'PENDING' // Default to PENDING
+        payment_status: 'PENDING'
       };
 
       console.log('Final session state:', finalSession);
@@ -377,7 +377,7 @@ export async function stopCurrentChargingSession(
       start_time: sessionDetails.start_time,
       end_time: new Date().toISOString(),
       energy_used_kwh: sessionDetails.energy_used_kwh || 0,
-      total_cost: sessionDetails.total_cost || calculateCost(sessionDetails.energy_used_kwh || 0), // Calculate if not present
+      total_cost: sessionDetails.total_cost,
       status: 'COMPLETED',
       payment_status: 'PENDING' // Default to PENDING
     };
@@ -435,31 +435,6 @@ export const updateSessionState = async (sessionId: number, updatedData: Session
   } catch (error) {
     console.error('Error updating session state:', error);
     throw error;
-  }
-};
-
-export const updateSessionCost = async (
-  sessionId: number, 
-  energyUsed: number
-): Promise<ChargingSession> => {
-  try {
-    const session = await auth();
-    if (!session?.user?.apiToken) {
-      throw new Error('No authentication token available');
-    }
-
-    const calculatedCost = calculateCost(energyUsed);
-    
-    const updateData: SessionUpdate = {
-      energy_used_kwh: energyUsed,
-      total_cost: calculatedCost,
-      current_battery_capacity_kw: 0 // This should be passed from the current battery level
-    };
-
-    return await updateSessionState(sessionId, updateData);
-  } catch (error) {
-    console.error('Error updating session cost:', error);
-    throw error instanceof Error ? error : new Error('Failed to update session cost');
   }
 };
 

@@ -92,16 +92,16 @@ const ChargingSessionCard = ({
   return (
     <Card
       onClick={() => setShowDetails((prev) => !prev)}
-      className="bg-[var(--cardblack)] border border-[var(--yellow)] p-4 cursor-pointer"
+      className="bg-[var(--cardblack)] border border-[var(--yellow)] p-2 md:p-4 cursor-pointer"
     >
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      <CardHeader className="p-2 md:p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center 
+        justify-between gap-4">
+          <div className="flex items-center space-x-3 md:space-x-4">
             {/* Add payment status indicator here */}
             {needsPayment && (
               <div className="relative">
-                <div className={`w-3 h-3 rounded-full ${getPaymentStatusColor(session.payment_status)} animate-pulse`} />
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                <div className={`w-2 md:w-3 h-2 md:h-3 rounded-full ${getPaymentStatusColor(session.payment_status)} animate-pulse`} />
               </div>
             )}
             
@@ -109,35 +109,35 @@ const ChargingSessionCard = ({
             <Image
               src="/car.svg"
               alt="Car"
-              width={48}
-              height={48}
-              className=""
+              width={36}
+              height={36}
+              className="w-8 h-8 md:w-12 md:h-12"
             />
             <div>
-              <p className="text-xl font-bold text-white">
+              <p className="text-lg md:text-xl font-bold text-white">
                 {associatedVehicle ? associatedVehicle.brand : "N/A"}
               </p>
-              <p className="text-sm text-gray-300">
+              <p className="text-xs md:text-sm text-gray-300">
                 {associatedVehicle ? associatedVehicle.license_plate : "N/A"}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-          <div className="bg-[var(--yellow)] rounded-lg mr-10">
+          <div className="flex items-center space-x-3 md:space-x-4 ml-auto">
+          <div className="bg-[var(--yellow)] rounded-lg p-2">
                 <Image
                   src="/charging.svg"
                   alt="Charging"
-                  width={48}
-                  height={48}
-                  className=""
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 md:w-8 md:h-8"
                 />
               </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-end">
               
-              <p className="text-xl font-bold text-white">
+              <p className="text-lg md:text-xl font-bold text-white">
                 {session.total_cost.toFixed(2)} zł
               </p>
-              <p className="text-sm text-gray-300">
+              <p className="text-xs md:text-sm text-gray-300">
                 {new Date(session.start_time).toLocaleDateString()}
               </p>
             </div>
@@ -164,7 +164,8 @@ const ChargingSessionCard = ({
         </div>
       </CardHeader>
       {showDetails && (
-        <CardContent className="space-y-2 transition-all duration-300 ease-in-out">
+        <CardContent className="space-y-3 md:space-y-4 p-2 md:p-4 
+        text-sm md:text-base">
           <div className="flex justify-between items-center">
             <p className="text-sm font-medium text-white">Energy Used</p>
             <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
@@ -364,62 +365,71 @@ export const ChargingSessionInfo = ({
   }
 
   return (
-    <div>
-      <Card className="bg-[var(--cardblack)] w-[90%] border border-[var(--yellow)]">
+    <div className="w-full px-2 md:px-4">
+      <Card className="bg-[var(--cardblack)] w-full max-w-[1200px] mx-auto border border-[var(--yellow)]">
         <CardHeader>
           <div className="flex flex-col gap-4">
-            <p className="text-2xl font-semibold text-center text-white">
+            <p className="text-xl md:text-2xl font-semibold text-center text-white">
               {label}
             </p>
             
-            {/* Search and Filters */}
+            {/* Search and Filters - Stack on mobile, row on desktop */}
             <div className="flex flex-col md:flex-row gap-4">
-              {/* Search Box */}
+              {/* Search Box - Full width on mobile */}
               <div className="relative flex-1">
                 <Input
                   type="text"
                   placeholder="Search by name or license plate..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                  className="pl-10 bg-gray-700 text-white border-[var(--yellow)] 
+                focus:ring-2 focus:ring-[var(--yellow)] w-full"
                 />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 
+              text-gray-400 w-4 h-4" />
               </div>
 
-              {/* Filter Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Filter:</span>
-                <select
-                  value={filterBy}
-                  onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                  className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
-                >
-                  <option value="all">All Sessions</option>
-                  <option value="completed">Completed</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="pending_payment">Pending Payment</option>
-                </select>
-              </div>
+              {/* Filter and Sort Group - Stack on mobile */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                {/* Filter Dropdown */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+                  <span className="text-gray-400 text-sm">Filter:</span>
+                  <select
+                    value={filterBy}
+                    onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                    className="w-full sm:w-auto bg-gray-700 text-white px-3 py-2 rounded-lg 
+                  border border-[var(--yellow)] focus:outline-none 
+                  focus:ring-2 focus:ring-[var(--yellow)]"
+                  >
+                    <option value="all">All Sessions</option>
+                    <option value="completed">Completed</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="pending_payment">Pending Payment</option>
+                  </select>
+                </div>
 
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="highest_cost">Highest Cost</option>
-                  <option value="lowest_cost">Lowest Cost</option>
-                </select>
+                {/* Sort Dropdown */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+                  <span className="text-gray-400 text-sm">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="w-full sm:w-auto bg-gray-700 text-white px-3 py-2 rounded-lg 
+                  border border-[var(--yellow)] focus:outline-none 
+                  focus:ring-2 focus:ring-[var(--yellow)]"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="highest_cost">Highest Cost</option>
+                    <option value="lowest_cost">Lowest Cost</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-2 md:p-4">
           {filterAndSortSessions(sessions)
             .slice(0, displayCount)
             .map((session) => {
