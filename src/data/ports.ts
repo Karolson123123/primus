@@ -127,12 +127,12 @@ export const updatePortStatus = async (portId: number, status: 'wolny' | 'zajety
 export const createPort = async (portData: CreatePortData): Promise<Port> => {
     try {
         const session = await auth();
-        
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error('Authentication required');
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        
         const response = await fetch(`${baseUrl}/ports`, {
             method: 'POST',
             headers: {
@@ -143,15 +143,14 @@ export const createPort = async (portData: CreatePortData): Promise<Port> => {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server error response:', errorText);
-            throw new Error('Failed to create port');
+            const error = await response.text();
+            throw new Error(error || 'Failed to create port');
         }
 
         return await response.json();
     } catch (error) {
-        console.error("Error in createPort:", error);
-        throw error instanceof Error ? error : new Error('An unexpected error occurred');
+        console.error('Error creating port:', error);
+        throw error instanceof Error ? error : new Error('Failed to create port');
     }
 };
 
@@ -193,8 +192,9 @@ export const updatePort = async (portId: number, data: Partial<CreatePortData>):
             throw new Error("No authentication token available");
         }
 
-        // Using PUT method as required by backend
-        const response = await fetch(`http://localhost:8000/ports/${portId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        
+        const response = await fetch(`${baseUrl}/ports/${portId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -212,6 +212,6 @@ export const updatePort = async (portId: number, data: Partial<CreatePortData>):
         return await response.json();
     } catch (error) {
         console.error("Error in updatePort:", error);
-        throw error;
+        throw error instanceof Error ? error : new Error('Failed to update port');
     }
 };

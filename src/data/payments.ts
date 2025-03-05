@@ -25,47 +25,43 @@ export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
+        console.log('Fetching payments from:', `${baseUrl}/payments`);
+        console.log('Using token:', session.user.apiToken);
+
         const response = await fetch(`${baseUrl}/payments`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.user.apiToken}`
+                'Authorization': `Bearer ${session.user.apiToken}`,
+                'Cache-Control': 'no-cache'
             },
+            next: { revalidate: 0 },
             cache: 'no-store'
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch payments');
+            const errorText = await response.text();
+            console.error('Payment API Error:', {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorText
+            });
+            throw new Error(`Failed to fetch payments: ${response.status} ${response.statusText}`);
         }
 
         const payments = await response.json();
-        
-        // Sort payments by status priority and ID
-        return payments.sort((a: Payment, b: Payment) => {
-            // First, sort by status priority
-            const getStatusPriority = (status: string) => {
-                switch (status.toLowerCase()) {
-                    case 'pending': return 0;
-                    case 'failed': return 1;
-                    case 'completed': return 2;
-                    default: return 3;
-                }
-            };
-
-            const statusPriorityA = getStatusPriority(a.status);
-            const statusPriorityB = getStatusPriority(b.status);
-
-            if (statusPriorityA !== statusPriorityB) {
-                return statusPriorityA - statusPriorityB;
-            }
-
-            // If status is the same, sort by ID in descending order
-            return b.id - a.id;
+        console.log('Successfully fetched payments:', {
+            count: payments?.length || 0
         });
 
+        return payments;
+
     } catch (error) {
-        console.error('Error fetching payments:', error);
-        return null;
+        console.error('Error in getPaymentsInfo:', {
+            name: error?.name,
+            message: error instanceof Error ? error.message : String(error)
+        });
+        throw error;
     }
 };
 

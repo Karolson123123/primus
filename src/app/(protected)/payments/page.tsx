@@ -7,50 +7,69 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input";
 
+interface ChargingSession {
+    id: number;
+    total_cost: number;
+    energy_used_kwh: number;
+    start_time: string;
+    end_time: string | null;
+}
+
+// Update the Payment interface to include charging_session
 interface Payment {
-    id: number
-    user_id: string
-    session_id: number
-    amount: number
-    status: 'pending' | 'completed' | 'failed'
-    transaction_id: number
-    payment_method: string
-    created_at: string
+    id: number;
+    user_id: string;
+    session_id: number;
+    status: 'pending' | 'completed' | 'failed';
+    transaction_id: number;
+    payment_method: string;
+    created_at: string;
+    charging_session: ChargingSession;  // Add this line
 }
 
 type FilterOption = 'all' | 'pending' | 'completed' | 'failed';
 type SortOption = 'newest' | 'oldest' | 'highest_amount' | 'lowest_amount';
 
-// Create a new PaymentCard component
+// Update the PaymentCard component to display charging session cost
 const PaymentCard = ({ payment }: { payment: Payment }) => {
-    const [showDetails, setShowDetails] = useState(false)
+    const [showDetails, setShowDetails] = useState(false);
+    
+    // Safely access charging session values with fallbacks
+    const totalCost = payment.charging_session?.total_cost ?? 0;
+    const energyUsed = payment.charging_session?.energy_used_kwh ?? 0;
+    const sessionStartTime = payment.charging_session?.start_time;
     
     return (
         <Card className="bg-[var(--cardblack)] border-[var(--yellow)]">
             <div 
                 onClick={() => setShowDetails(!showDetails)}
-                className="cursor-pointer p-4 text-white"
+                className="cursor-pointer p-4 max-lg:p-3 text-white"
             >
                 <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 max-lg:space-x-2">
                         <div>
-                            <p className="text-xl font-bold text-white">Payment #{payment.id}</p>
-                            <p className="text-sm text-gray-400">{new Date(payment.created_at).toLocaleDateString()}</p>
+                            <p className="text-xl max-lg:text-lg font-bold text-white">
+                                Payment #{payment.id}
+                            </p>
+                            <p className="text-sm max-lg:text-xs text-gray-400">
+                                {totalCost.toFixed(2)} PLN
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 max-lg:space-x-2">
                         <Badge 
                             className={`
                                 ${payment.status === 'completed' ? 'bg-green-500' : ''}
                                 ${payment.status === 'pending' ? 'bg-yellow-500' : ''}
                                 ${payment.status === 'failed' ? 'bg-red-500' : ''}
+                                text-sm max-lg:text-xs
                             `}
                         >
                             {payment.status.toUpperCase()}
                         </Badge>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className={`w-6 h-6 transform transition-transform duration-150 ${
+                            className={`w-6 h-6 max-lg:w-4 max-lg:h-4 transform transition-transform duration-150 ${
                                 showDetails ? "rotate-180" : ""
                             }`}
                             fill="none"
@@ -72,37 +91,37 @@ const PaymentCard = ({ payment }: { payment: Payment }) => {
                         showDetails ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
                     }`}
                 >
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--yellow)]">
-                        <div>
-                            <p className="text-sm text-gray-400">Transaction ID</p>
-                            <p className="font-mono text-white">{payment.transaction_id}</p>
+                    <div className="grid grid-cols-2 gap-4 max-lg:gap-2 pt-4 border-t border-[var(--yellow)]">
+                        <div className="space-y-1">
+                            <p className="text-sm max-lg:text-xs text-gray-400">Transaction ID</p>
+                            <p className="font-mono text-white text-sm max-lg:text-xs">
+                                {payment.transaction_id}
+                            </p>
                         </div>
-                        <div>
-                            <p className="text-sm text-gray-400">Amount</p>
-                            <p className="font-semibold text-white">{payment.amount} PLN</p>
+                        <div className="space-y-1">
+                            <p className="text-sm max-lg:text-xs text-gray-400">Session Cost</p>
+                            <p className="font-semibold text-white text-sm max-lg:text-xs">
+                                {totalCost.toFixed(2)} PLN
+                            </p>
                         </div>
-                        <div>
-                            <p className="text-sm text-gray-400">Payment Method</p>
-                            <p className="capitalize text-white">{payment.payment_method}</p>
+                        <div className="space-y-1">
+                            <p className="text-sm max-lg:text-xs text-gray-400">Energy Used</p>
+                            <p className="font-mono text-white text-sm max-lg:text-xs">
+                                {energyUsed.toFixed(2)} kWh
+                            </p>
                         </div>
-                        <div>
-                            <p className="text-sm text-gray-400">Session ID</p>
-                            <p className="text-white">#{payment.session_id}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-400">User ID</p>
-                            <p className="font-mono truncate text-white">{payment.user_id}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-400">Created At</p>
-                            <p className="text-white">{new Date(payment.created_at).toLocaleString()}</p>
+                        <div className="space-y-1">
+                            <p className="text-sm max-lg:text-xs text-gray-400">Session Date</p>
+                            <p className="font-mono text-white text-sm max-lg:text-xs">
+                                {sessionStartTime ? new Date(sessionStartTime).toLocaleDateString() : 'N/A'}
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
         </Card>
-    )
-}
+    );
+};
 
 export default function PaymentsPage() {
     const [payments, setPayments] = useState<Payment[]>([])
@@ -130,12 +149,15 @@ export default function PaymentsPage() {
         fetchPayments()
     }, [])
 
+    // Update the filterAndSortPayments function to use charging_session.total_cost
     const filterAndSortPayments = useCallback((paymentsToProcess: Payment[]) => {
         let filtered = paymentsToProcess.filter(payment => {
+            const totalCost = payment.charging_session?.total_cost ?? 0;
+            
             const matchesSearch = searchQuery === '' || 
                 payment.transaction_id.toString().includes(searchQuery) ||
                 payment.payment_method.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                payment.session_id.toString().includes(searchQuery);
+                totalCost.toString().includes(searchQuery);
 
             const matchesFilter = filterBy === 'all' ? true :
                 payment.status === filterBy;
@@ -144,13 +166,16 @@ export default function PaymentsPage() {
         });
 
         return filtered.sort((a, b) => {
+            const aCost = a.charging_session?.total_cost ?? 0;
+            const bCost = b.charging_session?.total_cost ?? 0;
+            
             switch (sortBy) {
                 case 'oldest':
                     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
                 case 'highest_amount':
-                    return b.amount - a.amount;
+                    return bCost - aCost;
                 case 'lowest_amount':
-                    return a.amount - b.amount;
+                    return aCost - bCost;
                 case 'newest':
                 default:
                     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -188,68 +213,82 @@ export default function PaymentsPage() {
     const remainingCount = payments.length - displayCount;
     const hasMore = remainingCount > 0;
 
+    // Update the main page component return
     return (
-        <Card className="bg-[var(--cardblack)] w-[90%] mx-auto border border-[var(--yellow)]">
-            <CardHeader>
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-2xl font-semibold text-white">
+        <Card className="bg-[var(--cardblack)] max-lg:border-none max-lg:bg-[var(--background)] w-[95%] max-lg:w-full mx-auto border border-[var(--yellow)]">
+            <CardHeader className="space-y-4 max-lg:space-y-3">
+                <div className="flex flex-col lg:flex-row justify-between items-center gap-4 max-lg:gap-3">
+                    <p className="text-2xl max-lg:text-xl font-semibold text-white">
                         Payment History
                     </p>
-                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="flex flex-col lg:flex-row items-center gap-4 max-lg:gap-3 w-full lg:w-auto">
                         {/* Search input */}
-                        <div className="relative w-full md:w-64">
+                        <div className="relative w-full lg:w-64">
                             <Input
                                 type="text"
                                 placeholder="Search payments..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                                className="pl-10 bg-gray-700 text-white border-[var(--yellow)] 
+                                    focus:ring-2 focus:ring-[var(--yellow)] text-sm max-lg:text-xs"
                             />
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 
+                                text-gray-400 w-4 h-4 max-lg:w-3 max-lg:h-3" />
                         </div>
 
-                        {/* Filter Dropdown */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Status:</span>
-                            <select
-                                value={filterBy}
-                                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
-                            >
-                                <option value="all">All</option>
-                                <option value="pending">Pending</option>
-                                <option value="completed">Completed</option>
-                                <option value="failed">Failed</option>
-                            </select>
-                        </div>
+                        {/* Filters container */}
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 
+                            max-lg:gap-2 w-full lg:w-auto">
+                            {/* Filter Dropdown */}
+                            <div className="flex items-center gap-2 w-full lg:w-auto">
+                                <span className="text-gray-400 text-sm max-lg:text-xs">Status:</span>
+                                <select
+                                    value={filterBy}
+                                    onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                                    className="bg-gray-700 text-white px-3 py-1 rounded-lg border 
+                                        border-[var(--yellow)] focus:outline-none focus:ring-2 
+                                        focus:ring-[var(--yellow)] text-sm max-lg:text-xs w-full lg:w-auto"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                            </div>
 
-                        {/* Sort Dropdown */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Sort by:</span>
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
-                            >
-                                <option value="newest">Newest First</option>
-                                <option value="oldest">Oldest First</option>
-                                <option value="highest_amount">Highest Amount</option>
-                                <option value="lowest_amount">Lowest Amount</option>
-                            </select>
+                            {/* Sort Dropdown */}
+                            <div className="flex items-center gap-2 w-full lg:w-auto">
+                                <span className="text-gray-400 text-sm max-lg:text-xs">Sort by:</span>
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                    className="bg-gray-700 text-white px-3 py-1 rounded-lg border 
+                                        border-[var(--yellow)] focus:outline-none focus:ring-2 
+                                        focus:ring-[var(--yellow)] text-sm max-lg:text-xs w-full lg:w-auto"
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="highest_amount">Highest Amount</option>
+                                    <option value="lowest_amount">Lowest Amount</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 max-lg:space-y-3">
                 {displayedPayments.map((payment) => (
                     <PaymentCard key={payment.id} payment={payment} />
                 ))}
 
                 {hasMore && (
-                    <div className="flex justify-center mt-6">
+                    <div className="flex justify-center mt-6 max-lg:mt-4">
                         <button 
                             onClick={handleLoadMore}
-                            className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+                            className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] 
+                                text-black font-medium px-6 py-2 rounded-lg transition-all 
+                                duration-200 ease-in-out transform hover:scale-105 active:scale-95
+                                text-sm max-lg:text-xs max-lg:px-4 max-lg:py-1.5"
                         >
                             Load More ({remainingCount} remaining)
                         </button>

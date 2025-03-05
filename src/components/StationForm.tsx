@@ -79,12 +79,15 @@ export function StationForm({ onSuccess }: StationFormProps) {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50">
-            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-[30%] text-white">
-                <h2 className="text-xl font-semibold mb-4">Create a New Station</h2>
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 p-4">
+            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 sm:p-6 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative">
+                {/* Close button */}
+                
+
+                <h2 className="text-xl max-lg:text-2xl font-semibold mb-4 pr-8">Create a New Station</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Station Name *
                         </label>
                         <Input
@@ -93,12 +96,12 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
                             placeholder="Enter station name"
-                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Latitude *
                         </label>
                         <Input
@@ -108,12 +111,12 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             required
                             step="any"
                             placeholder="Enter latitude"
-                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Longitude *
                         </label>
                         <Input
@@ -123,22 +126,22 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             required
                             step="any"
                             placeholder="Enter longitude"
-                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
 
                     {error && (
-                        <div className="text-red-500 text-sm">{error}</div>
+                        <div className="text-red-500 max-lg:text-base text-sm">{error}</div>
                     )}
                     {success && (
-                        <div className="text-green-500 text-sm">Station created successfully!</div>
+                        <div className="text-green-500 max-lg:text-base text-sm">Station created successfully!</div>
                     )}
 
                     <Button 
                         type="submit" 
                         disabled={isSubmitting}
-                        className="w-full"
+                        className="w-full max-lg:text-lg max-lg:p-3"
                     >
                         {isSubmitting ? 'Creating...' : 'Create Station'}
                     </Button>

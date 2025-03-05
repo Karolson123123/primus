@@ -29,6 +29,7 @@ interface VehiclesInfoProps {
 // First, add this type definition after your existing interfaces
 type SortOption = 'battery' | 'capacity' | 'alphabetical' | 'condition';
 
+// Update the VehicleCard component
 const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
   const [showDetails, setShowDetails] = useState(false);
   const toggleDetails = () => setShowDetails((prev) => !prev);
@@ -40,26 +41,25 @@ const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
   return (
     <div
       onClick={toggleDetails}
-      className="cursor-pointer rounded-lg border border-[var(--yellow)] p-4 space-y-2 bg-[var(--cardblack)]"
+      className="cursor-pointer rounded-lg border border-[var(--yellow)] p-3 sm:p-4 space-y-2 bg-[var(--cardblack)]"
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          {/* Car image placeholder */}
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Image
             src={'car.svg'}
             alt="Car"
-            width={48}
-            height={48}
-            className=""
+            width={36}
+            height={36}
+            className="w-8 h-8 sm:w-12 sm:h-12"
           />
           <div>
-            <p className="text-xl font-bold text-white">{vehicle.brand}</p>
-            <p className="text-sm text-gray-300">{vehicle.license_plate}</p>
+            <p className="text-base sm:text-xl font-bold text-white">{vehicle.brand}</p>
+            <p className="text-xs sm:text-sm text-gray-300">{vehicle.license_plate}</p>
           </div>
         </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={`w-6 h-6 transform transition-transform duration-150 ${
+          className={`w-4 h-4 sm:w-6 sm:h-6 transform transition-transform duration-150 ${
             showDetails ? "rotate-180" : ""
           }`}
           fill="none"
@@ -74,47 +74,48 @@ const VehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
           />
         </svg>
       </div>
+
       <div
         className={`transition-all duration-300 ease-in-out overflow-hidden ${
-          showDetails ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          showDetails ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="mt-4 space-y-4 border-t border-[var(--yellow)] pt-4">
-          {/* Battery Information Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Battery Capacity</p>
-              <div className="flex items-center space-x-2">
-                <p className="text-md text-white p-1 bg-gray-700 rounded-md">
+        <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4 border-t border-[var(--yellow)] pt-3 sm:pt-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-xs sm:text-sm text-gray-400">Battery Capacity</p>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <p className="text-xs sm:text-md text-white p-1 bg-gray-700 rounded-md">
                   {vehicle.battery_capacity_kwh} kWh
                 </p>
               </div>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Battery Condition</p>
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-xs sm:text-sm text-gray-400">Battery Condition</p>
               <Badge 
                 variant={vehicle.battery_condition > 0.7 ? "success" : "destructive"}
+                className="text-xs sm:text-sm px-2 py-1"
               >
                 {batteryConditionPercentage}%
               </Badge>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Current Battery</p>
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-xs sm:text-sm text-gray-400">Current Battery</p>
               <Badge 
                 variant={
                   (vehicle.current_battery_capacity_kw / vehicle.battery_capacity_kwh) > 0.7 
                     ? "success" 
                     : "destructive"
                 }
+                className="text-xs sm:text-sm px-2 py-1"
               >
                 {currentBatteryPercentage}%
               </Badge>
             </div>
-            {/* Add Max Charging Power */}
-            <div className="space-y-2">
-              <p className="text-sm text-gray-400">Max Charging Power</p>
-              <div className="flex items-center space-x-2">
-                <p className="text-md text-white p-1 bg-gray-700 rounded-md">
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-xs sm:text-sm text-gray-400">Max Charging Power</p>
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <p className="text-xs sm:text-md text-white p-1 bg-gray-700 rounded-md">
                   {vehicle.max_charging_powerkwh} kW
                 </p>
               </div>
@@ -193,32 +194,30 @@ export const VehiclesInfo = ({
     const hasMore = remainingCount > 0;
 
     return (
-        <Card className="bg-[var(--cardblack)] w-[90%]">
-            <CardHeader>
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-2xl font-semibold text-white">
+        <Card className="bg-[var(--cardblack)] w-full max-w-[95%] lg:max-w-[90%] mx-auto">
+            <CardHeader className="p-3 sm:p-6">
+                <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+                    <p className="text-xl sm:text-2xl font-semibold text-white text-center sm:text-left">
                         {label}
                     </p>
-                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-                        {/* Search input */}
-                        <div className="relative w-full md:w-64">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64">
                             <Input
                                 type="text"
                                 placeholder="Search vehicles..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                                className="pl-8 sm:pl-10 py-1 sm:py-2 text-sm sm:text-base bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
                             />
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
                         
-                        {/* Existing sort dropdown */}
                         <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Sort by:</span>
+                            <span className="text-gray-400 text-sm sm:text-base">Sort by:</span>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                                className="bg-gray-700 text-white text-sm sm:text-base px-2 sm:px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
                             >
                                 <option value="alphabetical">Alphabetical</option>
                                 <option value="battery">Battery %</option>
@@ -229,16 +228,16 @@ export const VehiclesInfo = ({
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-3 sm:p-6 space-y-3 sm:space-y-4">
                 {displayedVehicles.map((vehicle) => (
                     <VehicleCard key={vehicle.id} vehicle={vehicle} />
                 ))}
 
                 {hasMore && (
-                    <div className="flex justify-center mt-6">
+                    <div className="flex justify-center mt-4 sm:mt-6">
                         <button 
                             onClick={handleLoadMore}
-                            className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
+                            className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black text-sm sm:text-base font-medium px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
                         >
                             Load More ({remainingCount} remaining)
                         </button>
@@ -273,20 +272,28 @@ const VehiclesPage = () => {
         };
 
         fetchVehicles();
-    }, []);
+    }, []); // Remove the extra closing brace and add the fetchVehicles() call here
 
     if (isLoading) {
-        return <div className="text-white">Loading vehicles...</div>;
+        return (
+            <div className="w-full flex justify-center items-center min-h-screen">
+                <div className="text-white text-lg">Loading vehicles...</div>
+            </div>
+        );
     }
 
     if (error) {
-        return <div className="text-red-500">{error}</div>;
+        return (
+            <div className="w-full flex justify-center items-center min-h-screen">
+                <div className="text-red-500 text-lg">{error}</div>
+            </div>
+        );
     }
 
     return (
-        <div className="w-full flex justify-center items-center min-h-screen">
+        <div className="w-full flex justify-center items-center min-h-screen p-4">
             {vehicles.length === 0 ? (
-                <div className="text-white">No vehicles found</div>
+                <div className="text-white text-lg">No vehicles found</div>
             ) : (
                 <VehiclesInfo 
                     label="Moje pojazdy"

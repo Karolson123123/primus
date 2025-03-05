@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getPortsInfo, deletePort, updatePort } from "@/data/ports";
 import { PortForm } from './PortForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,7 @@ const StationCard = ({ station }: { station: Station }) => {
   const [showEditPort, setShowEditPort] = useState<number | null>(null);
   const [editStationData, setEditStationData] = useState(station);
   const [editPortData, setEditPortData] = useState<Port | null>(null);
-  const router = useRouter();
+
 
   useEffect(() => {
     const fetchPorts = async () => {
@@ -167,81 +166,85 @@ const StationCard = ({ station }: { station: Station }) => {
   return (
     <div
       onClick={toggleDetails}
-      className="cursor-pointer rounded-lg border p-4 space-y-2"
+      className="cursor-pointer rounded-lg border border-[var(--yellow)] p-4 sm:p-6 space-y-2"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-2">
+        <div className="flex items-center space-x-4 w-full sm:w-auto">
           <Image
             src={'/basic-marker.png'}
             alt="Charging Station"
-            width={48}
-            height={48}
+            width={40}
+            height={40}
+            className="w-8 h-8 sm:w-10 sm:h-10"
           />
-          <div>
-            <p className="text-xl font-bold text-white">
+          <div className="flex-1">
+            <p className="text-lg sm:text-xl font-bold text-white">
               {station.name}
             </p>
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${
+              <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                 ports.some(port => port.status === 'wolny') ? 'bg-green-500' : 'bg-red-500'
               }`} />
-              <span className="text-sm text-gray-400">
+              <span className="text-xs sm:text-sm text-gray-400">
                 {ports.filter(port => port.status === 'wolny').length}/{ports.length} ports available
               </span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           <AdminContent>
             <button
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
                 e.stopPropagation();
                 setShowEditStation(true);
               }}
-              className="text-gray-400 hover:text-white"
+              className="text-sm sm:text-base text-gray-400 hover:text-white px-2 py-1 
+                cursor-pointer z-10"
             >
               Edit
             </button>
             <button
-              onClick={handleDeleteStation}
-              className="text-red-500 hover:text-red-600"
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDeleteStation(e);
+              }}
+              className="text-sm sm:text-base text-red-500 hover:text-red-600 px-2 py-1 
+                cursor-pointer z-10"
             >
               Delete
             </button>
           </AdminContent>
         </div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`w-6 h-6 transform transition-transform duration-150 ${
-            showDetails ? "rotate-180" : ""
-          }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="white"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
       </div>
 
+      {/* Ports section */}
       <div className={`transition-all duration-300 ease-in-out ${
         showDetails ? "opacity-100" : "max-h-0 opacity-0 overflow-hidden"
       }`}>
-        <div className="mt-4 space-y-4 overflow-hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Charging Ports</h3>
+        <div className="mt-4 space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2">
+            <h3 className="text-base sm:text-lg font-semibold text-white">Charging Ports</h3>
             <AdminContent>
               <button
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   setShowPortForm(true);
                 }}
-                className="bg-[var(--yellow)] hover:bg-yellow-600 text-black px-4 py-2 rounded-lg"
+                className="text-xs sm:text-sm text-gray-400 hover:text-white px-2 py-1 
+                  cursor-pointer z-10"
               >
                 Add Port
               </button>
             </AdminContent>
           </div>
-          <div className="grid grid-cols-2 gap-4 overflow-hidden">
+
+          {/* Ports grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {ports.map((port, index) => (
               <div 
                 key={port.id}
@@ -249,39 +252,46 @@ const StationCard = ({ station }: { station: Station }) => {
                   e.stopPropagation();
                   setSelectedPort(port.status === 'wolny' ? port : null);
                 }}
-                className={`p-4 rounded-lg cursor-pointer transition-all
+                className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all
                   ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
                   ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-gray-800' : ''}
                 `}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${
+                    <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                       port.status === 'wolny' ? 'bg-green-500' : 
                       port.status === 'nieczynny' ? 'bg-red-500' : 
                       'bg-[var(--yellow)]'
                     }`} />
                     <div>
-                      <div>Port {index + 1}</div>
-                      <div className="text-sm text-gray-400">{port.power_kw}kW</div>
-                      <div className="text-sm text-gray-400">Status: {port.status}</div>
+                      <div className="text-sm sm:text-base">Port {index + 1}</div>
+                      <div className="text-xs sm:text-sm text-gray-400">{port.power_kw}kW</div>
+                      <div className="text-xs sm:text-sm text-gray-400">Status: {port.status}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <AdminContent>
                       <button
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           setShowEditPort(port.id);
                           setEditPortData(port);
                         }}
-                        className="text-gray-400 hover:text-white"
+                        className="text-xs sm:text-sm text-gray-400 hover:text-white px-2 py-1 
+                          cursor-pointer z-10"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={(e) => handleDeletePort(e, port.id)}
-                        className="text-red-500 hover:text-red-600"
+                        onClick={(e: React.MouseEvent) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeletePort(e, port.id);
+                        }}
+                        className="text-xs sm:text-sm text-red-500 hover:text-red-600 px-2 py-1 
+                          cursor-pointer z-10"
                       >
                         Delete
                       </button>
@@ -291,31 +301,14 @@ const StationCard = ({ station }: { station: Station }) => {
               </div>
             ))}
           </div>
-          
-          {showPortForm && (
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault(); // Add this to prevent any default behavior
-              }}
-              className="relative z-50" // Add z-index to ensure form stays on top
-            >
-              <PortForm
-                stationId={station.id}
-                onSuccess={() => {
-                  setShowPortForm(false);
-                  refreshPorts();
-                }}
-                onClose={() => setShowPortForm(false)}
-              />
-            </div>
-          )}
-          
+
+          {/* Start charging button */}
           {showDetails && (
             <UserContent>
               <button
                 onClick={(e) => handleChargingStart(e, selectedPort!)}
-                className={`w-full py-4 mt-4 transition-colors rounded-xl text-xl font-semibold ${
+                className={`w-full py-3 sm:py-4 mt-4 transition-colors rounded-xl 
+                  text-base sm:text-xl font-semibold ${
                   selectedPort 
                     ? 'bg-[var(--yellow)] hover:bg-yellow-600' 
                     : 'bg-gray-600 cursor-not-allowed'
@@ -333,18 +326,12 @@ const StationCard = ({ station }: { station: Station }) => {
           )}
         </div>
       </div>
-
-      {/* Edit Station Dialog */}
+      {/* Edit Station Modal */}
       {showEditStation && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowEditStation(false);
-          }}
-        >
-          <div className="bg-[var(--cardblack)] p-6 rounded-lg w-full max-w-md border border-[var(--yellow)]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[var(--cardblack)] p-6 rounded-lg border border-[var(--yellow)] w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">Edit Station</h2>
+              <h2 className="text-xl font-bold text-white">Edit Station</h2>
               <button 
                 onClick={() => setShowEditStation(false)}
                 className="text-gray-400 hover:text-white"
@@ -354,67 +341,44 @@ const StationCard = ({ station }: { station: Station }) => {
             </div>
             <form onSubmit={handleUpdateStation} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white">Name</label>
-                <Input
+                <label className="text-white block mb-2">Name</label>
+                <Input 
                   value={editStationData.name}
-                  onChange={(e) => setEditStationData({
-                    ...editStationData,
-                    name: e.target.value
-                  })}
-                  required
-                  className="bg-gray-700 text-white border-[var(--yellow)]"
+                  onChange={(e) => setEditStationData({...editStationData, name: e.target.value})}
+                  className="bg-gray-700 text-white w-full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white">Latitude</label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={editStationData.latitude}
-                  onChange={(e) => setEditStationData({
-                    ...editStationData,
-                    latitude: parseFloat(e.target.value)
+                <label className="text-white block mb-2">Status</label>
+                <Select 
+                  value={editStationData.status}
+                  onValueChange={(value) => setEditStationData({
+                    ...editStationData, 
+                    status: value as 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE'
                   })}
-                  required
-                  className="bg-gray-700 text-white border-[var(--yellow)]"
-                />
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="INACTIVE">Inactive</SelectItem>
+                    <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-white">Longitude</label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={editStationData.longitude}
-                  onChange={(e) => setEditStationData({
-                    ...editStationData,
-                    longitude: parseFloat(e.target.value)
-                  })}
-                  required
-                  className="bg-gray-700 text-white border-[var(--yellow)]"
-                />
-              </div>
-              <Button 
-                type="submit"
-                className="w-full bg-[var(--yellow)] hover:bg-yellow-600 text-black"
-              >
-                Save Changes
-              </Button>
+              <Button type="submit" className="w-full">Save Changes</Button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Edit Port Dialog */}
+      {/* Edit Port Modal */}
       {showEditPort !== null && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowEditPort(null);
-          }}
-        >
-          <div className="bg-[var(--cardblack)] p-6 rounded-lg w-full max-w-md border border-[var(--yellow)]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[var(--cardblack)] p-6 rounded-lg border border-[var(--yellow)] w-[90%] max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">Edit Port</h2>
+              <h2 className="text-xl font-bold text-white">Edit Port</h2>
               <button 
                 onClick={() => setShowEditPort(null)}
                 className="text-gray-400 hover:text-white"
@@ -424,40 +388,51 @@ const StationCard = ({ station }: { station: Station }) => {
             </div>
             <form onSubmit={handleUpdatePort} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white">Power (kW)</label>
-                <Input
+                <label className="text-white block mb-2">Power (kW)</label>
+                <Input 
                   type="number"
-                  step="0.1"
-                  value={editPortData?.power_kw}
+                  value={editPortData?.power_kw || ''}
                   onChange={(e) => setEditPortData(prev => 
-                    prev ? {...prev, power_kw: parseFloat(e.target.value)} : null
+                    prev ? {...prev, power_kw: Number(e.target.value)} : null
                   )}
-                  required
-                  className="bg-gray-700 text-white border-[var(--yellow)]"
+                  className="bg-gray-700 text-white w-full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white">Status</label>
-                <select
+                <label className="text-white block mb-2">Status</label>
+                <Select 
                   value={editPortData?.status}
-                  onChange={(e) => setEditPortData(prev => 
-                    prev ? {...prev, status: e.target.value as 'wolny' | 'zajety' | 'nieczynny'} : null
+                  onValueChange={(value) => setEditPortData(prev => 
+                    prev ? {...prev, status: value as 'wolny' | 'zajety' | 'nieczynny'} : null
                   )}
-                  className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
                 >
-                  <option value="wolny">Wolny</option>
-                  <option value="zajety">Zajęty</option>
-                  <option value="nieczynny">Nieczynny</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wolny">Wolny</SelectItem>
+                    <SelectItem value="zajety">Zajęty</SelectItem>
+                    <SelectItem value="nieczynny">Nieczynny</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Button 
-                type="submit"
-                className="w-full bg-[var(--yellow)] hover:bg-yellow-600 text-black"
-              >
-                Save Changes
-              </Button>
+              <Button type="submit" className="w-full">Save Changes</Button>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Port Form Modal */}
+      {showPortForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <PortForm
+            stationId={station.id}
+            onSuccess={() => {
+              setShowPortForm(false);
+              refreshPorts();
+            }}
+            onClose={() => setShowPortForm(false)}
+          />
         </div>
       )}
     </div>
@@ -541,7 +516,7 @@ export const StationsInfo = ({
 
     // Update the return statement to include search and filters
     return (
-        <Card className="bg-[var(--cardblack)] w-[90%] border border-[var(--yellow)]">
+        <Card className="bg-[var(--cardblack)] w-full border border-[var(--yellow)]">
             <CardHeader>
                 <div className="flex flex-col gap-4">
                     <p className="text-2xl font-semibold text-center text-white">

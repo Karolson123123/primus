@@ -169,7 +169,7 @@ const ChargingSessionCard = ({
           <div className="flex justify-between items-center">
             <p className="text-sm font-medium text-white">Energy Used</p>
             <p className="text-white text-xs font-mono p-1 bg-gray-700 rounded-md">
-              {session.energy_used_kwh} kWh
+            {session.energy_used_kwh.toFixed(2)} kWh
             </p>
           </div>
           <div className="flex justify-between items-center">
@@ -251,7 +251,7 @@ export const ChargingSessionInfo = ({
   }, []);
 
   const filterAndSortSessions = useCallback((sessionsToProcess: ChargingSession[]) => {
-    let filtered = sessionsToProcess.filter(session => {
+    const filtered = sessionsToProcess.filter(session => {
       // Get the associated vehicle for the session
       const associatedVehicle = vehicles.find(v => v.id === session.vehicle_id);
       

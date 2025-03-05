@@ -121,8 +121,8 @@ export default function ChargingPage() {
   const searchParams = useSearchParams();
 
   // Move all state declarations here
-  const [duration, setDuration] = useState(0);
-  const [targetPercentage, setTargetPercentage] = useState(0);
+  const [duration, setDuration] = useState<number | undefined>(undefined);
+  const [targetPercentage, setTargetPercentage] = useState<number | undefined>(undefined);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [error, setError] = useState<string>('');
@@ -132,7 +132,7 @@ export default function ChargingPage() {
   const [currentBatteryLevel, setCurrentBatteryLevel] = useState<number>(0);
   const [currentCapacityKWh, setCurrentCapacityKWh] = useState<number>(0);
   const [currentCost, setCurrentCost] = useState(0);
-  const [cost, setCost] = useState(0);
+  const [cost, setCost] = useState<number | undefined>(undefined);
   const [chargeMode, setChargeMode] = useState<'time' | 'cost' | 'percentage'>('time');
   const [showVehicleSelect, setShowVehicleSelect] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -271,26 +271,25 @@ export default function ChargingPage() {
 
 const cachedHandleStopCharging = useCallback(handleStopCharging, [currentBatteryLevel, currentCapacityKWh, currentCost, intervalId, router, selectedVehicle, sessionResult]);
 
-  useEffect(() => {
-    if (isCharging && remainingTime > 0) {
-      const interval = setInterval(() => {
-        setRemainingTime(prev => {
-          if (prev <= 1) {
-            // Auto stop the charging when time runs out
-            cachedHandleStopCharging();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-      setIntervalId(interval);
-      
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    }
-  }, [isCharging, remainingTime, cachedHandleStopCharging]);
+useEffect(() => {
+  if (isCharging && remainingTime > 0) {
+    const timer = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          cachedHandleStopCharging();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Cleanup
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }
+}, [isCharging, cachedHandleStopCharging]); // Remove remainingTime from dependencies
 
   // Add new effect to handle auto-stop conditions
   useEffect(() => {
@@ -1033,6 +1032,7 @@ useEffect(() => {
                         min={Math.ceil(currentBatteryLevel)}
                         max="100"
                         required
+                        placeholder='0-100'
                       />
                       <Button
                         type="button"
@@ -1057,6 +1057,7 @@ useEffect(() => {
                         className="w-full rounded-lg bg-[var(--cardblack)] text-white border border-[var(--yellow)] shadow-sm"
                         min="1"
                         required
+                        placeholder='1'
                       />
                       <Button
                         type="button"
@@ -1080,6 +1081,7 @@ useEffect(() => {
                         className="w-full rounded-lg bg-[var(--cardblack)] text-white border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
                         min="1"
                         required
+                        placeholder='1'
                       />
                       <Button
                         type="button"
@@ -1134,26 +1136,7 @@ useEffect(() => {
                     </Button>
                   )}
 
-                  {sessionResult && (
-                    <div className="p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-green-300 border-[var(--yellow)]">
-                      <p>Charging Session {isCharging ? 'In Progress' : 'Completed'}</p>
-                      <p>Session ID: {sessionResult.id}</p>
-                      {isCharging && (
-                          <p className="mt-2">
-                          </p>
-                      )}
-                      {/* Add payment button for completed sessions */}
-                      {!isCharging && (
-                        <Button
-                          onClick={() => router.push(`/payment?sessionId=${sessionResult.id}&amount=${currentCost}`)}
-                          className="w-full mt-4 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black"
-                        >
-                          Proceed to Payment
-                        </Button>
-                      )}
-                    </div>
-                    
-                  )}
+                  
                   
                 </div>
               </form>
@@ -1188,7 +1171,12 @@ useEffect(() => {
                 {isCharging ? 'Current' : 'Estimated'} Cost: {(isCharging ? currentCost : cost || 0).toFixed(2)} PLN
               </p>
               <p className="mt-2 text-yellow-500">
-                {isCharging ? 'Remaining' : 'Estimated'} Time: {Math.floor((isCharging ? remainingTime : estimatedTime * 60) / 60)}:{String((isCharging ? remainingTime : estimatedTime * 60) % 60).padStart(2, '0')}
+                {isCharging ? 'Remaining' : 'Estimated'} Time: {
+                  Math.floor(remainingTime / 60)
+                }:
+                {
+                  String(remainingTime % 60).padStart(2, '0')
+                }
               </p>
               
               {/* Add the payment button here */}

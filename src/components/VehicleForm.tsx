@@ -107,12 +107,13 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50">
-            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-[30%] text-white">
-            <h2 className="text-xl font-semibold mb-4">Create a New Vehicle</h2>
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 p-4">
+            <div className="bg-[var(--cardblack)] border border-[var(--yellow)] p-4 sm:p-6 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative">
+
+                <h2 className="text-xl max-lg:text-2xl font-semibold mb-4 pr-8">Create a New Vehicle</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             License Plate *
                         </label>
                         <Input
@@ -121,12 +122,12 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
                             required
                             placeholder="Enter license plate"
-                            className="mt-1 block  rounded-er-gray-300 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Brand *
                         </label>
                         <Input
@@ -135,12 +136,12 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                             required
                             placeholder="Enter brand"
-                            className="mt-1 block  rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Battery Capacity (kW) *
                         </label>
                         <Input
@@ -156,12 +157,12 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             min="1"
                             step="1" // Change to enforce integers
                             placeholder="Enter battery capacity"
-                            className="mt-1 block  rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Maximum Charging Power (kWh) *
                         </label>
                         <Input
@@ -177,12 +178,12 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             min="1"
                             step="1" // Change to enforce integers
                             placeholder="Enter maximum charging power"
-                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Battery Condition (%) *
                         </label>
                         <Input
@@ -200,12 +201,12 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             max="100"
                             step="1"
                             placeholder="Enter battery condition (0-100%)"
-                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium">
+                        <label className="block text-sm font-medium mb-1">
                             Current Battery Level (kW) *
                         </label>
                         <Input
@@ -225,22 +226,22 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
                             max={formData.battery_capacity_kwh}
                             step="0.1"
                             placeholder="Enter current battery level"
-                            className="mt-1 block rounded-md border-gray-300 shadow-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
 
                     {error && (
-                        <div className="text-red-500 text-sm">{error}</div>
+                        <div className="text-red-500 max-lg:text-base text-sm">{error}</div>
                     )}
                     {success && (
-                        <div className="text-green-500 text-sm">Vehicle created successfully!</div>
+                        <div className="text-green-500 max-lg:text-base text-sm">Vehicle created successfully!</div>
                     )}
 
                     <Button 
                         type="submit" 
                         disabled={isSubmitting}
-                        className="w-full"
+                        className="w-full max-lg:text-lg max-lg:p-3"
                     >
                         {isSubmitting ? 'Creating...' : 'Create Vehicle'}
                     </Button>

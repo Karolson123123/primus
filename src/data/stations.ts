@@ -19,7 +19,6 @@ export interface CreateStationData {
 
 export const getStationsInfo = async (): Promise<ChargingStation[] | null> => {
     try {
-        // Try to get session but don't require it
         const session = await auth();
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
@@ -27,21 +26,25 @@ export const getStationsInfo = async (): Promise<ChargingStation[] | null> => {
             'Content-Type': 'application/json'
         };
 
-        // Add authorization header only if user is logged in
         if (session?.user?.apiToken) {
             headers['Authorization'] = `Bearer ${session.user.apiToken}`;
         }
 
-        const response = await fetch(`${baseUrl}/stations`, {
-            method: 'GET',
-            headers
-        });
+        try {
+            const response = await fetch(`${baseUrl}/stations`, {
+                method: 'GET',
+                headers
+            });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch stations');
+            if (!response.ok) {
+                throw new Error('Failed to fetch stations');
+            }
+            const data = await response.json();
+            return data;
+        } catch (networkError) {
+            console.error("Network error:", networkError);
+            throw new Error('Unable to connect to the server. Please check if the server is running.');
         }
-        const data = await response.json();
-        return data;
     } catch (error) {
         console.error("Error fetching stations:", error);
         return null;
