@@ -6,6 +6,9 @@ import { getPaymentsInfo } from "@/data/payments";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
+/**
+ * Interfejsy i typy
+ */
 interface Payment {
     id: number;
     user_id: string;
@@ -25,16 +28,23 @@ interface PaymentsInfoProps {
 type FilterOption = 'all' | 'pending' | 'completed' | 'failed';
 type SortOption = 'newest' | 'oldest' | 'highest_amount' | 'lowest_amount';
 
+/**
+ * Komponent wyświetlający listę płatności z filtrowaniem i sortowaniem
+ */
 export const PaymentsInfo = ({
     payments = [],
     label,
     isLoading = false,
 }: PaymentsInfoProps) => {
+    // Stan komponentu
     const [searchQuery, setSearchQuery] = useState('');
     const [filterBy, setFilterBy] = useState<FilterOption>('all');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     const [displayCount, setDisplayCount] = useState(5);
 
+    /**
+     * Filtrowanie i sortowanie płatności
+     */
     const filterAndSortPayments = useCallback((paymentsToProcess: Payment[]) => {
         let filtered = paymentsToProcess.filter(payment => {
             const matchesSearch = searchQuery === '' || 
@@ -62,10 +72,7 @@ export const PaymentsInfo = ({
         });
     }, [searchQuery, filterBy, sortBy]);
 
-    const handleLoadMore = useCallback(() => {
-        setDisplayCount(prev => Math.min(prev + 5, payments.length));
-    }, [payments.length]);
-
+    // Ekran ładowania
     if (isLoading) {
         return (
             <Card className="bg-[var(--cardblack)] w-[90%]">
@@ -97,13 +104,11 @@ export const PaymentsInfo = ({
                         {label}
                     </p>
                     
-                    {/* Search and Filters */}
                     <div className="flex flex-col md:flex-row gap-4">
-                        {/* Search Box */}
                         <div className="relative flex-1">
                             <Input
                                 type="text"
-                                placeholder="Search by session ID or payment method..."
+                                placeholder="Szukaj po ID sesji lub metodzie płatności..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
@@ -111,7 +116,6 @@ export const PaymentsInfo = ({
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         </div>
 
-                        {/* Filter Dropdown */}
                         <div className="flex items-center gap-2">
                             <span className="text-gray-400">Status:</span>
                             <select
@@ -119,25 +123,24 @@ export const PaymentsInfo = ({
                                 onChange={(e) => setFilterBy(e.target.value as FilterOption)}
                                 className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
                             >
-                                <option value="all">All</option>
-                                <option value="pending">Pending</option>
-                                <option value="completed">Completed</option>
-                                <option value="failed">Failed</option>
+                                <option value="all">Wszystkie</option>
+                                <option value="pending">Oczekujące</option>
+                                <option value="completed">Zakończone</option>
+                                <option value="failed">Nieudane</option>
                             </select>
                         </div>
 
-                        {/* Sort Dropdown */}
                         <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Sort:</span>
+                            <span className="text-gray-400">Sortuj:</span>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                                 className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
                             >
-                                <option value="newest">Newest First</option>
-                                <option value="oldest">Oldest First</option>
-                                <option value="highest_amount">Highest Amount</option>
-                                <option value="lowest_amount">Lowest Amount</option>
+                                <option value="newest">Najnowsze</option>
+                                <option value="oldest">Najstarsze</option>
+                                <option value="highest_amount">Najdroższe</option>
+                                <option value="lowest_amount">Najtańsze</option>
                             </select>
                         </div>
                     </div>
@@ -145,52 +148,49 @@ export const PaymentsInfo = ({
             </CardHeader>
 
             <CardContent className="space-y-4">
-                {displayedPayments.map((payment) => { 
-                    const halo = new Date(payment.created_at);
+                {displayedPayments.map((payment) => {
+                    const date = new Date(payment.created_at);
                     return (
-                    <div key={payment.id} className="rounded-lg border p-4 space-y-3">
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Id Sesji
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {payment.session_id}
-                            </p>
+                        <div key={payment.id} className="rounded-lg border p-4 space-y-3">
+                            <div className="flex flex-row items-center justify-between">
+                                <p className="text-sm font-medium text-white">ID Sesji</p>
+                                <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
+                                    {payment.session_id}
+                                </p>
+                            </div>
+                            <div className="flex flex-row items-center justify-between">
+                                <p className="text-sm font-medium text-white">Koszt</p>
+                                <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
+                                    {payment.amount} zł
+                                </p>
+                            </div>
+                            <div className="flex flex-row items-center justify-between">
+                                <p className="text-sm font-medium text-white">
+                                    Metoda płatności
+                                </p>
+                                <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
+                                    {payment.payment_method}
+                                </p>
+                            </div>
+                            <div className="flex flex-row items-center justify-between">
+                                <p className="text-sm font-medium text-white">
+                                    Data transakcji
+                                </p>
+                                <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
+                                    {`${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')} ${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`}
+                                </p>
+                            </div>
                         </div>
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Koszt
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {payment.amount} zł
-                            </p>
-                        </div>
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Metoda płatności
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {payment.payment_method}
-                            </p>
-                        </div>
-                        <div className="flex flex-row items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Data transakcji
-                            </p>
-                            <p className="text-white truncate text-xs max-w-[180px] font-mono p-1 bg-gray-700 rounded-md">
-                                {halo.getHours() < 10 ? "0" + halo.getHours() : halo.getHours()}:{halo.getMinutes() < 10 ? "0" + halo.getMinutes() : halo.getMinutes()} {halo.getDate() < 10 ? "0" + halo.getDate() : halo.getDate()}.{halo.getMonth() < 10 ? "0" + halo.getMonth() : halo.getMonth()}.{halo.getFullYear()}
-                            </p>
-                        </div>
-                    </div>
-                )})}
+                    );
+                })}
 
                 {hasMore && (
                     <div className="flex justify-center mt-6">
                         <button 
-                            onClick={handleLoadMore}
+                            onClick={() => setDisplayCount(prev => Math.min(prev + 5, filteredPayments.length))}
                             className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95"
                         >
-                            Load More ({filteredPayments.length - displayCount} remaining)
+                            Pokaż więcej ({filteredPayments.length - displayCount} pozostało)
                         </button>
                     </div>
                 )}
@@ -199,19 +199,20 @@ export const PaymentsInfo = ({
     );
 };
 
+/**
+ * Strona płatności z obsługą ładowania danych
+ */
 const PaymentsPage = () => {
-    const [Payments, setPayments] = useState<Payment[]>([]);
+    const [payments, setPayments] = useState<Payment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchPayments = async () => {
             try {
                 const data = await getPaymentsInfo();
-                if (data) {
-                    setPayments(data);
-                }
+                if (data) setPayments(data);
             } catch (error) {
-                console.error("Error fetching Payments:", error);
+                // Obsługa błędu
             } finally {
                 setIsLoading(false);
             }
@@ -221,14 +222,14 @@ const PaymentsPage = () => {
     }, []);
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <div>Ładowanie...</div>;
     }
 
     return (
         <div className="w-full flex justify-center items-center min-h-screen">
             <PaymentsInfo 
-                label="Moje pojazdy"
-                payments={Payments}
+                label="Historia płatności"
+                payments={payments}
                 isLoading={isLoading}
             />
         </div>

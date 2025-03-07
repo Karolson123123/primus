@@ -20,14 +20,17 @@ import { register } from "@/actions/register";
 import { useState, useTransition } from "react";
 import Socials from "@/components/auth/Socials";
 
+/**
+ * Komponent formularza rejestracji
+ * Obsługuje proces rejestracji nowego użytkownika wraz z walidacją danych
+ */
 export default function RegisterForm() {
+    // Stan komponentu
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
-    
-    
-
     const [isPending, startTransition] = useTransition();
 
+    // Inicjalizacja formularza z walidacją
     const form = useForm<z.infer<typeof RegisterSchema>>({
         resolver: zodResolver(RegisterSchema),
         defaultValues: {
@@ -37,6 +40,10 @@ export default function RegisterForm() {
         }
     });
 
+    /**
+     * Obsługa wysłania formularza
+     * Przeprowadza proces rejestracji i obsługuje odpowiedź serwera
+     */
     const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
         setError("");
         setSuccess("");
@@ -47,7 +54,8 @@ export default function RegisterForm() {
                     setError(data.error);
                     setSuccess(data.success);
                 })
-    });
+                .catch(() => setError("Wystąpił błąd podczas rejestracji"));
+        });
     }
     
     return (
@@ -60,15 +68,15 @@ export default function RegisterForm() {
                         render={({field}) => (
                             <FormItem>
                                 <FormLabel>Nazwa użytkownika</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            placeholder="Mati Usiek" 
-                                            type = "text"
-                                            />
-                                    </FormControl>
-                                    <FormMessage></FormMessage>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        disabled={isPending}
+                                        placeholder="Jan Kowalski" 
+                                        type="text"
+                                    />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -78,15 +86,15 @@ export default function RegisterForm() {
                         render={({field}) => (
                             <FormItem>
                                 <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            placeholder="primus@ngineers.pl" 
-                                            type = "email"
-                                            />
-                                    </FormControl>
-                                    <FormMessage></FormMessage>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        disabled={isPending}
+                                        placeholder="jan.kowalski@example.com" 
+                                        type="email"
+                                    />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -96,25 +104,30 @@ export default function RegisterForm() {
                         render={({field}) => (
                             <FormItem>
                                 <FormLabel>Hasło</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            placeholder="*******" 
-                                            type = "password"
-                                            />
-                                    </FormControl>
-                                    <FormMessage></FormMessage>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        disabled={isPending}
+                                        placeholder="********" 
+                                        type="password"
+                                    />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
                 </div>
-                <FormError message={error}></FormError>
-                <FormSuccess message={success}></FormSuccess>
+                <FormError message={error} />
+                <FormSuccess message={success} />
 
-                <Button disabled={isPending}>Zarejestruj się</Button>
-                <Socials></Socials>
+                <Button 
+                    disabled={isPending}
+                    className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                >
+                    Zarejestruj się
+                </Button>
+                <Socials />
             </form>
         </Form>
-    )
-};
+    );
+}

@@ -3,26 +3,29 @@
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { UserRole } from "@prisma/client";
 
-
-
-interface LoggedInProps {
+/**
+ * Interfejs właściwości komponentu użytkownika
+ * @property children - Elementy do wyrenderowania dla zalogowanych użytkowników
+ */
+interface UserContentProps {
     children: React.ReactNode;
-};
+}
 
+/**
+ * Komponent warunkowego renderowania treści dla zalogowanych użytkowników
+ * Wyświetla zawartość tylko dla użytkowników z rolą USER
+ */
 export const UserContent = ({
     children,
-}: LoggedInProps)  => {
+}: UserContentProps) => {
+    // Pobranie roli aktualnie zalogowanego użytkownika
     const role = useCurrentRole();
 
-    if (role == UserRole.USER) {
-        return (
-            <>
-                {children}
-            </>
-        )
+    // Renderowanie treści tylko dla zwykłych użytkowników
+    if (role === UserRole.USER) {
+        return <>{children}</>;
     }
 
-    
-
-    
+    // Dla innych ról nie renderuj niczego
+    return null;
 };

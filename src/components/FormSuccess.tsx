@@ -1,10 +1,21 @@
 import { FaCheckCircle } from "react-icons/fa";
 
+/**
+ * Interfejs właściwości komponentu sukcesu formularza
+ * @property message - Opcjonalna wiadomość sukcesu do wyświetlenia
+ */
 interface FormSuccessProps {
-    message?: string
+    message?: string;
 }
 
-export const FormSuccess = ({message}: FormSuccessProps) => {
+/**
+ * Komponent wyświetlający komunikat sukcesu w formularzu
+ * Renderuje zielony alert z ikoną potwierdzenia i tekstem sukcesu
+ */
+export const FormSuccess = ({
+    message
+}: FormSuccessProps) => {
+    // Jeśli brak wiadomości, nie renderuj niczego
     if (!message) return null;
 
     return (
@@ -12,5 +23,5 @@ export const FormSuccess = ({message}: FormSuccessProps) => {
             <FaCheckCircle className="h-4 w-4" />
             <p>{message}</p>
         </div>
-    )
-}
+    );
+};

@@ -14,6 +14,9 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { MarkerCluster } from 'leaflet';
 
+/**
+ * Interfejsy opisujące struktury danych
+ */
 interface Station {
     id: number;
     name: string;
@@ -21,7 +24,6 @@ interface Station {
     longitude: number;
     created_at: string;
 }
-
 
 interface Port {
     id: number;
@@ -31,40 +33,40 @@ interface Port {
     station_id: Station['id'];
 }
 
-// Add new interface for station info styling
 interface StationInfoStyles {
-  containerWidth?: string;
-  position?: 'left' | 'right';
-  maxHeight?: string;
-  background?: string;
-  textColor?: string;
-  borderRadius?: string;
-  shadow?: string;
-  phoneStyles?: {
-    width?: string;
-    height?: string;
-    padding?: string;
-    margin?: string;
-  };
+    containerWidth?: string;
+    position?: 'left' | 'right';
+    maxHeight?: string;
+    background?: string;
+    textColor?: string;
+    borderRadius?: string;
+    shadow?: string;
+    phoneStyles?: {
+        width?: string;
+        height?: string;
+        padding?: string;
+        margin?: string;
+    };
 }
 
-// Add new interface for search box styling
 interface SearchBoxStyles {
-  width?: string;
-  position?: 'top-left' | 'top-right' | 'top-center';
-  margin?: string;
+    width?: string;
+    position?: 'top-left' | 'top-right' | 'top-center';
+    margin?: string;
 }
 
-// Update MapProps interface
 interface MapProps {
-  width?: string;
-  searchboxWidth?: string;
-  selectedStationId?: string;
-  containerHeight?: string;
-  stationInfoStyles?: StationInfoStyles;
-  searchBoxStyles?: SearchBoxStyles;
+    width?: string;
+    searchboxWidth?: string;
+    selectedStationId?: string;
+    containerHeight?: string;
+    stationInfoStyles?: StationInfoStyles;
+    searchBoxStyles?: SearchBoxStyles;
 }
 
+/**
+ * Konfiguracja ikon markerów na mapie
+ */
 const icon = L.icon({
   iconUrl: "/basic-marker.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -106,6 +108,9 @@ const selectedIcon = L.icon({
   shadowSize: [41, 41]
 });
 
+/**
+ * Funkcja tworząca niestandardową ikonę dla klastra markerów
+ */
 const createClusterCustomIcon = (cluster: MarkerCluster) => {
     const count = cluster.getChildCount();
     let size = 40;
@@ -243,6 +248,7 @@ export default function Map({
     const [activeMarker, setActiveMarker] = useState<number | null>(null);
     const [selectedPort, setSelectedPort] = useState<Port | null>(null);
     const chargingButtonRef = useRef<HTMLButtonElement>(null);
+    const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
     // existing code for fetching ports and stations
     useEffect(() => {
@@ -343,7 +349,7 @@ export default function Map({
                 >
                     {stations.map((station, index) => {
                         const markerPosition: LatLngTuple = [station.latitude, station.longitude];
-                        const isSelected = station.id.toString() === selectedStationId;
+                        const isSelected = station.id.toString() === selectedMarkerId;
                         
                         return (
                             <Marker 
@@ -352,6 +358,7 @@ export default function Map({
                                 icon={isSelected ? selectedIcon : icon}
                                 eventHandlers={{
                                     click: () => {
+                                        setSelectedMarkerId(station.id.toString());
                                         setActiveMarker(activeMarker === index ? null : index);
                                     }
                                 }}
@@ -366,7 +373,7 @@ export default function Map({
                 <div 
                     key={`popup-${index}`}
                     className={`absolute top-[50%] max-lg:top-32 h-[96%] w-[400px] max-lg:w-full max-lg:h-[90px]
-                                transform -translate-y-1/2 right-4 max-lg:right-0
+                                transform -translate-y-1/2 right-4 max-lg:right-0 z-50
                                 ${activeMarker === index ? 'block max-lg:flex' : 'hidden'}
                                 `}
                     style={{ 
@@ -388,7 +395,8 @@ export default function Map({
                         <button
                             onClick={() => {
                                 setActiveMarker(null);
-                                setSelectedPort(null); // Reset port selection when closing
+                                setSelectedMarkerId(null); // Reset selected marker
+                                setSelectedPort(null);
                             }}
                             className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-700 transition-colors z-[3]"
                         >
@@ -427,35 +435,54 @@ export default function Map({
                                     
                             </section>
                             <section className='flex flex-col gap-4 animate-display-from-top z-[1] bg-[var(--cardblack)] rounded-3xl p-7'>
-    <h3 className="text-2xl mb-2">Select Charging Port:</h3>
+    <h3 className="text-2xl mb-2 font-semibold text-[var(--text-color)]">Wybierz port ładowania:</h3>
     {ports.filter(port => port.station_id === station.id).map((port, index) => (
-        <div 
-            key={port.id} 
-            onClick={() => {
-                setSelectedPort(port.status === 'wolny' ? port : null);
-                // Add smooth scrolling to the charging button
-                setTimeout(() => {
-                    chargingButtonRef.current?.scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }, 100);
-            }}
-            className={`flex items-center gap-4 text-xl p-4 rounded-lg cursor-pointer transition-all
-                ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
-                ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-gray-800' : ''}
-            `}
-        >
-            <div className={`w-3 h-3 rounded-full ${
-                port.status === 'wolny' ? 'bg-green-500' : 
-                port.status === 'nieczynny' ? 'bg-red-500' : 
-                'bg-[var(--yellow)]'
-            }`} />
-            <div>
-                <div>Port {index + 1}</div>
-                <div className="text-sm text-gray-400">{port.power_kw}kW</div>
-                <div className="text-sm text-gray-400">Status: {port.status}</div>
+        <div key={port.id} className="flex flex-col gap-2">
+            <div 
+                onClick={() => setSelectedPort(port.status === 'wolny' ? port : null)}
+                className={`flex items-center gap-4 text-xl p-4 rounded-lg cursor-pointer transition-all
+                    ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
+                    ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-gray-800' : ''}
+                `}
+            >
+                <div className={`w-3 h-3 rounded-full ${
+                    port.status === 'wolny' ? 'bg-green-500' : 
+                    port.status === 'nieczynny' ? 'bg-red-500' : 
+                    'bg-[var(--yellow)]'
+                }`} />
+                <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                        <span>Port {index + 1}</span>
+                        <span className="text-sm font-semibold text-[var(--yellow)]">{port.power_kw}kW</span>
+                    </div>
+                    <div className="text-sm text-gray-400">Status: {port.status}</div>
+                </div>
             </div>
+
+            {/* Button appears under selected port */}
+            {selectedPort?.id === port.id && port.status === 'wolny' && (
+                <button
+                    onClick={() => {
+                        const stationPorts = ports.filter(p => p.station_id === station.id);
+                        const portNumber = stationPorts.findIndex(p => p.id === port.id) + 1;
+
+                        const url = `/charging?` + new URLSearchParams({
+                            station: station.id.toString(),
+                            name: station.name,
+                            port: port.id.toString(),
+                            power: port.power_kw.toString(),
+                            portNumber: portNumber.toString()
+                        }).toString();
+
+                        router.push(url);
+                        setActiveMarker(null);
+                    }}
+                    className="w-full py-3 mt-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] 
+                             transition-colors rounded-lg text-xl font-semibold text-black"
+                >
+                    Rozpocznij ładowanie
+                </button>
+            )}
         </div>
     ))}
 </section>

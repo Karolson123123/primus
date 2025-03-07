@@ -1,4 +1,3 @@
-
 import { ListItemText } from "@mui/material";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -7,6 +6,9 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import Image from "next/image";
 import { useState } from "react";
 
+/**
+ * Interfejs opisujący strukturę stacji ładowania
+ */
 interface Station {
     id: number;
     name: string;
@@ -15,25 +17,41 @@ interface Station {
     created_at: string;
 }
 
+/**
+ * Interfejs właściwości komponentu wyszukiwarki
+ */
 interface SearchBoxProps {
     stations: Station[];
     width?: string;
     onStationSelect: (station: Station) => void;
 }
 
+/**
+ * Komponent wyszukiwarki stacji ładowania
+ * Umożliwia filtrowanie i wybór stacji z listy
+ */
 export default function SearchBox({ stations, width = '300px', onStationSelect }: SearchBoxProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [showResults, setShowResults] = useState(false);
 
+    /**
+     * Filtrowanie stacji na podstawie wyszukiwanej frazy
+     */
     const filteredStations = stations.filter(station => 
         station.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    /**
+     * Obsługa zmiany tekstu w polu wyszukiwania
+     */
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
         setShowResults(true);
     };
 
+    /**
+     * Obsługa wyboru stacji z listy wyników
+     */
     const handleStationClick = (station: Station) => {
         onStationSelect(station);
         setShowResults(false);
@@ -48,14 +66,13 @@ export default function SearchBox({ stations, width = '300px', onStationSelect }
                         className='z-[10000] bg-[var(--background)] w-full'
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        placeholder="Search stations..."
+                        placeholder="Wyszukaj stacje..."
                     />
                 </div>
-                
             </div>
             {showResults && searchTerm && (
                 <div className="absolute top-full mt-1 w-full max-h-60 overflow-y-auto bg-[var(--background)] rounded-lg shadow-lg z-[100000]">
-                    <List component="nav" aria-label="stations search results">
+                    <List component="nav" aria-label="wyniki wyszukiwania stacji">
                         {filteredStations.map((station) => (
                             <ListItem 
                                 key={station.id} 
@@ -65,7 +82,7 @@ export default function SearchBox({ stations, width = '300px', onStationSelect }
                                 <ListItemIcon>
                                     <Image 
                                         src="/basic-marker.png" 
-                                        alt="marker" 
+                                        alt="znacznik" 
                                         width={32} 
                                         height={32}
                                     />
@@ -79,7 +96,7 @@ export default function SearchBox({ stations, width = '300px', onStationSelect }
                         {filteredStations.length === 0 && (
                             <ListItem>
                                 <ListItemText 
-                                    primary="No stations found" 
+                                    primary="Nie znaleziono stacji" 
                                     className="text-gray-400"
                                 />
                             </ListItem>

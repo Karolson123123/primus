@@ -3,6 +3,7 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { Toaster } from "sonner";
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: "EVolve",
@@ -19,26 +20,28 @@ export default async function RootLayout({
     <SessionProvider session={session}>
       <html lang="pl">
         <body className={`antialiased`}>
-          <Toaster 
-            theme="dark" 
-            position="top-right"
-            expand={false}
-            richColors
-            closeButton
-            toastOptions={{
-              style: {
-                backgroundColor: "var(--yellow)",
-              },
-              actionButtonStyle: {
-                backgroundColor: "var(--cardblack)",
-                color: "white",
-              },
-              descriptionStyle: {
-                color: "var(--cardblack)",
-              },
-            }}
-          />
-          {children}
+          <ThemeProvider>
+            <Toaster 
+              theme="dark" 
+              position="top-right"
+              expand={false}
+              richColors
+              closeButton
+              toastOptions={{
+                style: {
+                  backgroundColor: "var(--yellow)",
+                },
+                actionButtonStyle: {
+                  backgroundColor: "var(--cardblack)",
+                  color: "white",
+                },
+                descriptionStyle: {
+                  color: "var(--cardblack)",
+                },
+              }}
+            />
+            {children}
+          </ThemeProvider>
         </body>
       </html>
     </SessionProvider>

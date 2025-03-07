@@ -13,109 +13,104 @@ import { db } from "@/lib/db";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
 import bcrypt from "bcryptjs";
 
+/**
+ * Akcja logowania użytkownika
+ * Obsługuje proces uwierzytelniania, weryfikacji email i dwuetapowej weryfikacji
+ * 
+ * @param values - Dane logowania (email, hasło, kod weryfikacyjny)
+ * @returns Obiekt z informacją o sukcesie/błędzie lub statusie 2FA
+ */
 export const login = async (values: z.infer<typeof LoginSchema>) => {
+    // Walidacja danych wejściowych
     const validatedFields = LoginSchema.safeParse(values);
 
-    if (!validatedFields.success){
-        return { error: "Nieprawidłowe wartości!"}
+    if (!validatedFields.success) {
+        return { error: "Nieprawidłowe dane logowania" };
     }
 
     const { email, password, code } = validatedFields.data;
     
+    // Sprawdzenie czy użytkownik istnieje
     const existingUser = await getUserByEmail(email);
 
     if (!existingUser || !existingUser.email || !existingUser.password) {
-        return { error: "Dla podanego adresu email nie ma konta!" };
+        return { error: "Konto z podanym adresem email nie istnieje" };
     }
     
+    // Weryfikacja hasła
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
     if (!isPasswordValid) {
-        throw new Error('Błędne hasło');
+        return { error: "Nieprawidłowe hasło" };
     }
 
+    // Weryfikacja adresu email
     if (!existingUser.emailVerified) {
         const verificationToken = await generateVerificationToken(existingUser.email);
-
         await sendVerificationEmail(
             verificationToken.email,
             verificationToken.token,
         );
-
-        return { success: "Email weryfikacyjny wysłany!" };
+        return { success: "Link weryfikacyjny został wysłany na podany adres email" };
     }
 
-    if (existingUser.isTwoFactorEnabled && existingUser.email){
+    // Obsługa weryfikacji dwuetapowej
+    if (existingUser.isTwoFactorEnabled && existingUser.email) {
         if (code) {
-            const twoFactorToken = await getTwoFactorTokenByEmail(
-                existingUser.email
-            );
+            // Weryfikacja kodu 2FA
+            const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
 
-            if (!twoFactorToken) {
-                return { error: "Nieprawidłowy kod!" };
+            if (!twoFactorToken || twoFactorToken.token !== code) {
+                return { error: "Nieprawidłowy kod weryfikacyjny" };
             }
 
-            if (twoFactorToken.token !== code) {
-                return { error: "Nieprawidłowy kod!" };
-            }
-
-            const hasExpired = new Date(twoFactorToken.expires) < new Date();
-
-            if (hasExpired) {
-                return { error: "Kod wygasł!" };
+            if (new Date(twoFactorToken.expires) < new Date()) {
+                return { error: "Kod weryfikacyjny wygasł" };
             }
             
+            // Usunięcie wykorzystanego tokenu
             await db.twoFactorToken.delete({
-                where: { id: twoFactorToken.id},
+                where: { id: twoFactorToken.id }
             });
 
-            const existingConfirmation = await getTwoFactorConfirmationByUserId(
-                existingUser.id
-            );
-
-            if(existingConfirmation) {
-               await db.twoFactorConfirmation.delete({
-                    where: { id: existingConfirmation.id },
-               });
+            // Aktualizacja potwierdzenia 2FA
+            const existingConfirmation = await getTwoFactorConfirmationByUserId(existingUser.id);
+            if (existingConfirmation) {
+                await db.twoFactorConfirmation.delete({
+                    where: { id: existingConfirmation.id }
+                });
             }
 
             await db.twoFactorConfirmation.create({
-                data: {
-                    userId: existingUser.id,
-                }
+                data: { userId: existingUser.id }
             });
         } else {
+            // Wysłanie nowego kodu 2FA
             const twoFactorToken = await generateTwoFactorToken(existingUser.email);
             await sendTwoFactorTokenEmail(
                 twoFactorToken.email,
                 twoFactorToken.token
             );
-
             return { twoFactor: true };
         }
-        
     }
 
+    // Logowanie użytkownika
     try {
         await signIn("credentials", {
             email,
             password,
             redirectTo: DEFAULT_LOGIN_REDIRECT
-        })
+        });
     } catch (error) {
         if (error instanceof AuthError) {
             switch(error.type) {
                 case "CredentialsSignin":
-                    return { error: "Niepoprawne dane!" }
+                    return { error: "Nieprawidłowe dane logowania" };
                 default:
-                    return { error: "Coś poszło nie tak!" }
+                    return { error: "Wystąpił błąd podczas logowania" };
             }
         }
-
-
-        
-
         throw error;
     }
-
-}
+};
 

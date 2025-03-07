@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { updateVehicleCapacity } from '@/data/vehicles';
 import { updatePortStatus } from "./ports";
 
-
+// Interfejsy definiujące strukturę danych
 export interface Vehicle {
   id: number;
   license_plate: string;
@@ -41,47 +41,97 @@ export interface ChargingSession {
   current_battery_capacity_kw?: number;
 }
 
-export interface SessionUpdate {
-  energy_used_kwh: number;
-  total_cost: number;
-  current_battery_capacity_kw?: number;
-  payment_status?: 'PENDING' | 'COMPLETED' | 'FAILED';
-  current_battery_level?: number;
-}
-
-export const getChargingSessionsInfo = async (): Promise<ChargingSession[] | null> => {
-    try {
-        const session = await auth();
-        
-        if (!session?.user?.apiToken) {
-            console.error("No authentication token available");
-            return null;
-        }
-
-        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-        
-        const response = await fetch(`${baseUrl}/sessions`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.user.apiToken}`
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            // Changed error message to be more specific
-            throw new Error('Failed to fetch charging sessions');
-        }
-
-        return await response.json();
-    } catch (error) {
-        // Updated error logging to be more specific
-        console.error("Error fetching charging sessions:", error);
-        return null;
+/**
+ * Pobiera informacje o wszystkich sesjach ładowania
+ */
+export const getChargingSessionsInfo = async () => {
+  try {
+    const session = await auth();
+    if (!session?.user?.apiToken) {
+      throw new Error("Brak tokenu uwierzytelniającego");
     }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    
+    console.log('Fetching sessions from:', `${baseUrl}/sessions`);
+    console.log('Using token:', session.user.apiToken ? 'Token present' : 'No token');
+
+    const response = await fetch(`${baseUrl}/sessions`, {
+      headers: {
+        'Authorization': `Bearer ${session.user.apiToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to fetch sessions:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      throw new Error(`Błąd pobierania sesji: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Raw API Response:', data);
+
+    // Check if data is empty or invalid
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.warn('No charging sessions found in response');
+      return [];
+    }
+
+    // Rest of your existing validation code...
+    const validatedSessions = data
+      .filter(session => session && typeof session === 'object')
+      .map(session => {
+        // Deep clone the session object to avoid mutation
+        const processedSession = {
+          ...session,
+          id: parseInt(session.id, 10),
+          vehicle_id: session.vehicle_id ? parseInt(session.vehicle_id, 10) : undefined,
+          port_id: session.port_id ? parseInt(session.port_id, 10) : undefined,
+          energy_used_kwh: parseFloat(session.energy_used_kwh || 0),
+          total_cost: parseFloat(session.total_cost || 0),
+          status: session.status || 'COMPLETED',
+          payment_status: session.payment_status || 'PENDING',
+          start_time: session.start_time || new Date().toISOString(),
+          end_time: session.end_time || null,
+          duration_minutes: session.duration_minutes ? parseInt(session.duration_minutes, 10) : undefined,
+          current_battery_capacity_kw: session.current_battery_capacity_kw ? 
+            parseFloat(session.current_battery_capacity_kw) : undefined
+        };
+
+        if (!processedSession.vehicle_id) {
+          console.warn('Session missing vehicle_id:', {
+            sessionId: processedSession.id,
+            rawSession: session
+          });
+        }
+
+        return processedSession;
+      })
+      .filter(session => session.id && session.vehicle_id && session.port_id);
+
+    console.log('Validated sessions:', validatedSessions);
+    return validatedSessions;
+
+  } catch (error) {
+    console.error("Error in getChargingSessionsInfo:", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    return [];
+  }
 };
 
+/**
+ * Rozpoczyna nową sesję ładowania
+ */
 export const startChargingSession = async (sessionData: ChargingSessionData): Promise<ChargingSession> => {
   try {
     const session = await auth();
@@ -191,6 +241,9 @@ export const startChargingSession = async (sessionData: ChargingSessionData): Pr
   }
 };
 
+/**
+ * Kończy aktywną sesję ładowania
+ */
 export const stopChargingSession = async (sessionData: ChargingSession): Promise<ChargingSession> => {
   try {
     const session = await auth();
@@ -242,6 +295,9 @@ export const stopChargingSession = async (sessionData: ChargingSession): Promise
   }
 };
 
+/**
+ * Aktualizuje pojemność pojazdu i kończy sesję ładowania
+ */
 export const updateVehicleCapacityAndStopSession = async (
   sessionData: ChargingSession, 
   vehicleId: number, 
@@ -325,6 +381,9 @@ export const updateVehicleCapacityAndStopSession = async (
   }
 };
 
+/**
+ * Pobiera aktywną sesję ładowania
+ */
 export const getActiveChargingSession = async (): Promise<ChargingSession | null> => {
   try {
     const sessions = await getChargingSessionsInfo();
@@ -439,6 +498,9 @@ export const updateSessionState = async (sessionId: number, updatedData: Session
 };
 
 // Add a new function to update payment status
+/**
+ * Aktualizuje status płatności dla sesji
+ */
 export const updatePaymentStatus = async (
   sessionId: number,
   paymentStatus: 'PENDING' | 'COMPLETED' | 'FAILED'

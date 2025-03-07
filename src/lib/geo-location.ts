@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 
+/**
+ * Hook do pobierania aktualnej lokalizacji geograficznej
+ * @returns Obiekt zawierający stan lokalizacji i współrzędne lub błąd
+ */
 const useGeoLocation = () => {
     const [location, setLocation] = useState({
         loaded: false,
         coordinates: { lat: "", lng: "" }
-    })  
-    
-    const onSuccess = location => {
+    });
+
+    const onSuccess = (location: GeolocationPosition) => {
         setLocation({
             loaded: true,
             coordinates: {
@@ -16,24 +20,24 @@ const useGeoLocation = () => {
         });
     };
 
-    const onError = error => {
+    const onError = (error: { code: number; message: string; }) => {
         setLocation({
             loaded: true,
             error,
         });
-    }
+    };
 
     useEffect(() => {
         if (!("geolocation" in navigator)) {
             onError({
                 code: 0,
-                message: "Geolocation not supported",
-            })
+                message: "Geolokalizacja nie jest wspierana",
+            });
         }
         navigator.geolocation.getCurrentPosition(onSuccess, onError);
     }, []);
 
-    return location
-}
+    return location;
+};
 
 export default useGeoLocation;

@@ -2,12 +2,19 @@ import ResetForm from "@/components/auth/ResetForm";
 import Logo from "@/components/Logo";
 import Link from "next/link";
 
+/**
+ * Strona resetowania hasła
+ * Wyświetla formularz umożliwiający zresetowanie hasła poprzez email
+ */
 export default function ResetPage() {
     return (
         <>
+            {/* Logo w lewym górnym rogu */}
             <div className="absolute top-4 left-4 z-10">
                 <Logo />
             </div>
+
+            {/* Główny kontener z formularzem resetowania hasła */}
             <div className="grid place-items-center bg-[var(--black)] min-h-screen p-4">
                 <main className="p-4 md:p-8 bg-[var(--cardblack)] rounded-lg 
                     w-[95%] md:w-[70%] lg:w-[50%] 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getChargingSessionsInfo } from '@/data/charging-session'
 import { ChargingSessionInfo } from '@/components/ChargingSessionInfo';
 
+// Interfejs opisujący strukturę sesji ładowania
 interface ChargingSession {
     id: number;
     name: string;
@@ -19,10 +20,12 @@ interface ChargingSession {
 }
 
 export default function ChargingSessionPage() {
+  // Stan komponentu
   const [sessions, setSessions] = useState<ChargingSession[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Pobieranie danych sesji ładowania przy montowaniu komponentu
   useEffect(() => {
     const fetchSessions = async () => {
       try {
@@ -31,8 +34,7 @@ export default function ChargingSessionPage() {
           setSessions(sessionsData);
         }
       } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        setError('Failed to load vehicles. Please try again later.');
+        setError('Nie udało się załadować sesji. Spróbuj ponownie później.');
       } finally {
         setLoading(false);
       }
@@ -41,7 +43,7 @@ export default function ChargingSessionPage() {
   }, []);
 
   if (loading) {
-    return <div>Loading sessions...</div>
+    return <div>Ładowanie sesji...</div>
   }
 
   if (error) {
@@ -49,9 +51,9 @@ export default function ChargingSessionPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Charging Sessions</h1>
-      <ChargingSessionInfo sessions={sessions} label='Charging Session Information' />
+    <div className="container mx-auto py-6 max-lg:w-full max-lg:mt-20">
+      <h1 className="text-2xl font-bold mb-6 text-[--text-color]">Historia sesji ładowania</h1>
+      <ChargingSessionInfo sessions={sessions} label='Informacje o sesjach ładowania' />
     </div>
   )
 }

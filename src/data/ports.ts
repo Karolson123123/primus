@@ -2,6 +2,9 @@
 
 import { auth } from "@/auth";
 
+/**
+ * Interfejs portu ładowania
+ */
 interface Port {
     id: number;
     station_id: number;
@@ -11,18 +14,21 @@ interface Port {
     created_at: string;
 }
 
+/**
+ * Dane wymagane do utworzenia nowego portu
+ */
 export interface CreatePortData {
     station_id: number;
     power_kw: number;
     status: 'wolny' | 'zajety' | 'nieczynny';
 }
 
+/**
+ * Pobiera informacje o wszystkich portach ładowania
+ */
 export const getPortsInfo = async (): Promise<Port[] | null> => {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-        
-        // Add better error handling and logging
-        console.log('Fetching ports from:', `${baseUrl}/ports`);
         
         const response = await fetch(`${baseUrl}/ports`, {
             method: 'GET',
@@ -30,43 +36,31 @@ export const getPortsInfo = async (): Promise<Port[] | null> => {
                 'Content-Type': 'application/json',
                 'Cache-Control': 'no-cache'
             },
-            next: { revalidate: 0 } // Disable caching
+            next: { revalidate: 0 }
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Ports API Error:', {
-                status: response.status,
-                statusText: response.statusText,
-                body: errorText
-            });
-            throw new Error(`Failed to fetch ports: ${response.status} ${response.statusText}`);
+            throw new Error(`Błąd pobierania portów: ${response.status}`);
         }
 
-        const data = await response.json();
-        console.log('Successfully fetched ports:', {
-            count: data?.length || 0
-        });
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error("Error fetching ports:", {
-            name: error?.name,
-            message: error instanceof Error ? error.message : String(error)
-        });
         return null;
     }
 }
 
+/**
+ * Aktualizuje status portu ładowania
+ */
 export const updatePortStatus = async (portId: number, status: 'wolny' | 'zajety' | 'nieczynny'): Promise<Port | null> => {
     try {
         const session = await auth();
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error("Brak tokenu uwierzytelniającego");
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
-        // First check if there are any active sessions for this port
         const activeSessions = await fetch(
             `${baseUrl}/sessions/active/${portId}`,
             {
@@ -77,13 +71,12 @@ export const updatePortStatus = async (portId: number, status: 'wolny' | 'zajety
         );
 
         if (!activeSessions.ok) {
-            throw new Error('Failed to check active sessions');
+            throw new Error('Błąd sprawdzania aktywnych sesji');
         }
 
         const sessionsData = await activeSessions.json();
         const hasActiveSessions = sessionsData.length > 0;
 
-        // If port is marked as nieczynny, keep it that way regardless of sessions
         if (status === 'nieczynny') {
             const response = await fetch(`${baseUrl}/ports/${portId}/status`, {
                 method: 'PATCH',
@@ -95,13 +88,11 @@ export const updatePortStatus = async (portId: number, status: 'wolny' | 'zajety
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update port status');
+                throw new Error('Błąd aktualizacji statusu portu');
             }
             return response.json();
         }
 
-        // If there are active sessions, port must be zajety
-        // If no active sessions and not marked as nieczynny, port should be wolny
         const actualStatus = hasActiveSessions ? 'zajety' : 'wolny';
 
         const response = await fetch(`${baseUrl}/ports/${portId}/status`, {
@@ -114,21 +105,23 @@ export const updatePortStatus = async (portId: number, status: 'wolny' | 'zajety
         });
 
         if (!response.ok) {
-            throw new Error('Failed to update port status');
+            throw new Error('Błąd aktualizacji statusu portu');
         }
 
         return response.json();
     } catch (error) {
-        console.error("Error updating port status:", error);
         return null;
     }
 };
 
+/**
+ * Tworzy nowy port ładowania
+ */
 export const createPort = async (portData: CreatePortData): Promise<Port> => {
     try {
         const session = await auth();
         if (!session?.user?.apiToken) {
-            throw new Error('Authentication required');
+            throw new Error('Wymagane uwierzytelnienie');
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -143,23 +136,24 @@ export const createPort = async (portData: CreatePortData): Promise<Port> => {
         });
 
         if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error || 'Failed to create port');
+            throw new Error('Błąd tworzenia portu');
         }
 
         return await response.json();
     } catch (error) {
-        console.error('Error creating port:', error);
-        throw error instanceof Error ? error : new Error('Failed to create port');
+        throw error instanceof Error ? error : new Error('Błąd tworzenia portu');
     }
 };
 
+/**
+ * Usuwa port ładowania
+ */
 export const deletePort = async (portId: number): Promise<void> => {
     try {
         const session = await auth();
         
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error("Brak tokenu uwierzytelniającego");
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -171,25 +165,25 @@ export const deletePort = async (portId: number): Promise<void> => {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server error response:', errorText);
             throw new Error(
                 response.status === 400 
-                    ? 'Cannot delete port with active charging sessions' 
-                    : 'Failed to delete port'
+                    ? 'Nie można usunąć portu z aktywnymi sesjami ładowania' 
+                    : 'Błąd usuwania portu'
             );
         }
     } catch (error) {
-        console.error("Error in deletePort:", error);
-        throw error instanceof Error ? error : new Error('An unexpected error occurred');
+        throw error instanceof Error ? error : new Error('Wystąpił nieoczekiwany błąd');
     }
 };
 
+/**
+ * Aktualizuje dane portu ładowania
+ */
 export const updatePort = async (portId: number, data: Partial<CreatePortData>): Promise<Port> => {
     try {
         const session = await auth();
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error("Brak tokenu uwierzytelniającego");
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
@@ -204,14 +198,11 @@ export const updatePort = async (portId: number, data: Partial<CreatePortData>):
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server error response:', errorText);
-            throw new Error('Failed to update port');
+            throw new Error('Błąd aktualizacji portu');
         }
 
         return await response.json();
     } catch (error) {
-        console.error("Error in updatePort:", error);
-        throw error instanceof Error ? error : new Error('Failed to update port');
+        throw error instanceof Error ? error : new Error('Błąd aktualizacji portu');
     }
 };

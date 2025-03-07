@@ -10,24 +10,24 @@ import { generateVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail } from "@/lib/mail";
 import bcrypt from "bcryptjs";
 
-
-
-
-
+// Funkcja do aktualizacji ustawień użytkownika
 export const settings = async (
     values: z.infer<typeof SettingsSchema>
 ) => {
+    // Pobierz aktualnie zalogowanego użytkownika
     const user = await currentUser();
     if (!user) {
         return { error: "Nieautoryzowane" }
     }
 
+    // Pobierz użytkownika z bazy danych na podstawie ID
     const dbUser = await getUserById(user.id);
     
     if (!dbUser) {
         return { error: "Nieautoryzowane" }
     }
 
+    // Jeśli użytkownik korzysta z OAuth, wyczyść odpowiednie pola
     if (user.isOAuth) {
         values.email = undefined;
         values.password = undefined;
@@ -35,6 +35,7 @@ export const settings = async (
         values.isTwoFactorEnabled = undefined;
     }
 
+    // Sprawdź, czy email został zmieniony
     if (values.email && values.email !== user.email) {
         const existingUser = await getUserByEmail(values.email);
     
@@ -42,6 +43,7 @@ export const settings = async (
             return { error: "Email zajęty" }
         }
 
+        // Wygeneruj token weryfikacyjny i wyślij email weryfikacyjny
         const verificationToken = await generateVerificationToken(
             values.email
         );
@@ -54,6 +56,7 @@ export const settings = async (
         return { success: "Email weryfikacyjny wysłany" }
     }
 
+    // Sprawdź poprawność hasła i zaktualizuj hasło
     if (values.password && values.newPassword && dbUser.password) {
         const passwordsMatch = await bcrypt.compare(
             values.password,
@@ -73,7 +76,7 @@ export const settings = async (
         values.newPassword = undefined
     }
 
-
+    // Zaktualizuj dane użytkownika w bazie danych
     await db.user.update({
         where: { id: dbUser.id},
         data: {

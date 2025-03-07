@@ -20,15 +20,21 @@ import { useState, useTransition } from "react";
 import { newPassword } from "@/actions/new-password";
 import { useSearchParams } from "next/navigation";
 
-export default function NewmPasswordForm() {
+/**
+ * Komponent formularza zmiany hasła
+ * Obsługuje proces ustawiania nowego hasła z wykorzystaniem tokenu resetującego
+ */
+export default function NewPasswordForm() {
+    // Pobieranie tokenu z parametrów URL
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
 
+    // Stan komponentu
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
-    
     const [isPending, startTransition] = useTransition();
 
+    // Inicjalizacja formularza z walidacją
     const form = useForm<z.infer<typeof NewPasswordSchema>>({
         resolver: zodResolver(NewPasswordSchema),
         defaultValues: {
@@ -36,6 +42,10 @@ export default function NewmPasswordForm() {
         }
     });
 
+    /**
+     * Obsługa wysłania formularza
+     * Przeprowadza proces zmiany hasła i obsługuje odpowiedź serwera
+     */
     const onSubmit = (values: z.infer<typeof NewPasswordSchema>) => {
         setError("");
         setSuccess("");
@@ -46,7 +56,8 @@ export default function NewmPasswordForm() {
                     setError(data?.error);
                     setSuccess(data?.success);
                 })
-    });
+                .catch(() => setError("Wystąpił błąd podczas zmiany hasła"));
+        });
     };
 
     return (
@@ -59,27 +70,30 @@ export default function NewmPasswordForm() {
                         render={({field}) => (
                             <FormItem>
                                 <FormLabel>Nowe hasło</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            placeholder="******" 
-                                            type = "password"
-                                            />
-                                    </FormControl>
-                                    <FormMessage></FormMessage>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        disabled={isPending}
+                                        placeholder="******" 
+                                        type="password"
+                                    />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
-                    
                 </div>
                 
-                <FormError message={error}></FormError>
-                <FormSuccess message={success}></FormSuccess>
+                <FormError message={error} />
+                <FormSuccess message={success} />
                 
-                <Button disabled={isPending}>Zmień hasło</Button>
-                
+                <Button 
+                    disabled={isPending}
+                    className="w-full bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                >
+                    Zmień hasło
+                </Button>
             </form>
         </Form>
-    )
-};
+    );
+}

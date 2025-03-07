@@ -88,9 +88,9 @@ const SettingsPage =  () => {
             }
         }, []);
     return (
-        <Card className="bg-[var(--cardblack)] w-[95%] max-lg:w-full mx-auto border border-[var(--yellow)]">
+        <Card className="bg-[var(--cardblack)] w-[95%] max-lg:w-full mx-auto border border-[var(--yellow)] max-lg:w-full max-lg:mt-20">
             <CardHeader>
-                <p className="text-2xl max-lg:text-xl font-semibold text-center text-white">
+                <p className="text-2xl max-lg:text-xl font-semibold text-center text-[--text-color]">
                     Ustawienia
                 </p>
             </CardHeader>
@@ -105,8 +105,8 @@ const SettingsPage =  () => {
                                 control={form.control}
                                 name="name"
                                 render={({ field }) => (
-                                    <FormItem className="text-white">
-                                        <FormLabel className="text-white text-sm max-lg:text-xs">
+                                    <FormItem className="text-[--text-color]">
+                                        <FormLabel className="text-[--text-color] text-sm max-lg:text-xs">
                                             Nazwa użytkownika
                                         </FormLabel>
                                         <FormControl>
@@ -117,7 +117,7 @@ const SettingsPage =  () => {
                                                 type="text"
                                                 className="bg-[var(--cardblack)] border-[var(--yellow)] 
                                                     focus:border-[var(--yellow)] focus:ring-[var(--yellow)]
-                                                    text-white text-sm max-lg:text-xs"
+                                                    text-[--text-color] text-sm max-lg:text-xs"
                                             />
                                         </FormControl>
                                         <FormMessage className="text-xs max-lg:text-[10px]"/>
@@ -130,8 +130,8 @@ const SettingsPage =  () => {
                                         control={form.control}
                                         name="email"
                                         render={({ field }) => (
-                                            <FormItem className="text-white">
-                                                <FormLabel className="text-white text-sm max-lg:text-xs">
+                                            <FormItem className="text-[--text-color]">
+                                                <FormLabel className="text-[--text-color] text-sm max-lg:text-xs">
                                                     Email
                                                 </FormLabel>
                                                 <FormControl>
@@ -142,7 +142,7 @@ const SettingsPage =  () => {
                                                         type="email"
                                                         className="bg-[var(--cardblack)] border-[var(--yellow)] 
                                                             focus:border-[var(--yellow)] focus:ring-[var(--yellow)]
-                                                            text-white text-sm max-lg:text-xs w-full
+                                                            text-[--text-color] text-sm max-lg:text-xs w-full
                                                             max-lg:p-2 max-lg:h-10"
                                                         autoComplete="email"
                                                     />
@@ -155,8 +155,8 @@ const SettingsPage =  () => {
                                         control={form.control}
                                         name="password"
                                         render={({ field }) => (
-                                            <FormItem className="text-white w-full">
-                                                <FormLabel className="text-white text-sm max-lg:text-xs">
+                                            <FormItem className="text-[--text-color] w-full">
+                                                <FormLabel className="text-[--text-color] text-sm max-lg:text-xs">
                                                     Obecne hasło
                                                 </FormLabel>
                                                 <FormControl>
@@ -167,7 +167,7 @@ const SettingsPage =  () => {
                                                         type="password"
                                                         className="bg-[var(--cardblack)] border-[var(--yellow)] 
                                                             focus:border-[var(--yellow)] focus:ring-[var(--yellow)]
-                                                            text-white text-sm max-lg:text-xs w-full
+                                                            text-[--text-color] text-sm max-lg:text-xs w-full
                                                             max-lg:p-2 max-lg:h-10"
                                                         autoComplete="current-password"
                                                     />
@@ -180,8 +180,8 @@ const SettingsPage =  () => {
                                         control={form.control}
                                         name="newPassword"
                                         render={({ field }) => (
-                                            <FormItem className="text-white w-full">
-                                                <FormLabel className="text-white text-sm max-lg:text-xs">
+                                            <FormItem className="text-[--text-color] w-full">
+                                                <FormLabel className="text-[--text-color] text-sm max-lg:text-xs">
                                                     Nowe hasło
                                                 </FormLabel>
                                                 <FormControl>
@@ -192,7 +192,7 @@ const SettingsPage =  () => {
                                                         type="password"
                                                         className="bg-[var(--cardblack)] border-[var(--yellow)] 
                                                             focus:border-[var(--yellow)] focus:ring-[var(--yellow)]
-                                                            text-white text-sm max-lg:text-xs w-full
+                                                            text-[--text-color] text-sm max-lg:text-xs w-full
                                                             max-lg:p-2 max-lg:h-10"
                                                         autoComplete="new-password"
                                                     />
@@ -206,60 +206,28 @@ const SettingsPage =  () => {
                                     />
                                 </>
                             )}
-                            <FormField 
-                                control={form.control}
-                                name="role"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-white text-sm max-lg:text-xs">
-                                            Rola
-                                        </FormLabel>
-                                        <Select 
-                                            disabled={isPending}
-                                            onValueChange={field.onChange}
-                                            defaultValue={field.value}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="bg-[var(--cardblack)] border-[var(--yellow)] 
-                                                    text-white text-sm max-lg:text-xs">
-                                                    <SelectValue placeholder="Wybierz role" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent className="bg-[var(--cardblack)] border-[var(--yellow)] 
-                                                text-white text-sm max-lg:text-xs">
-                                                <SelectItem value={UserRole.ADMIN}>
-                                                    Administrator
-                                                </SelectItem>
-                                                <SelectItem value={UserRole.USER}>
-                                                    Użytkownik
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage className="text-xs max-lg:text-[10px]"/>
-                                    </FormItem>
-                                )}
-                            />
+                            {/*  */}
                             {user?.isOAuth === false && (
                                 <FormField 
                                     control={form.control}
                                     name="isTwoFactorEnabled"
                                     render={({ field }) => (
                                         <FormItem className="flex flex-row items-center justify-between rounded-lg 
-                                            border border-[var(--yellow)] p-3 max-lg:p-2 shadow-sm text-white">
+                                            border border-[var(--yellow)] p-3 max-lg:p-2 shadow-sm text-[--text-color]">
                                             <div className="space-y-0.5">
-                                                <FormLabel className="text-white text-sm max-lg:text-xs">
+                                                <FormLabel className="text-[--text-color] text-sm max-lg:text-xs">
                                                     Weryfikacja dwuetapowa
                                                 </FormLabel>
                                                 <FormDescription className="text-xs max-lg:text-[10px]">
                                                     Włącz weryfikacje dwuetapową dla swojego konta
                                                 </FormDescription>
                                             </div>
-                                            <FormControl>
+                                            <FormControl >
                                                 <Switch
                                                     disabled={isPending}
                                                     checked={field.value}
                                                     onCheckedChange={field.onChange}
-                                                    className="data-[state=checked]:bg-[var(--yellow)]"
+                                                    className="data-[state=checked]:bg-[var(--yellow)] data-[state=unchecked]:bg-[var(--black)] [filter:invert(0)] "
                                                 />
                                             </FormControl>
                                         </FormItem>

@@ -2,7 +2,9 @@
 
 import { auth } from "@/auth";
 
-// Update interface to match backend schema
+/**
+ * Interfejs reprezentujący płatność
+ */
 interface Payment {
     id: number;
     user_id: string;
@@ -14,20 +16,35 @@ interface Payment {
     created_at: string;
 }
 
+export interface PaymentCreate {
+    session_id: number;
+    amount: number;
+    payment_method: string;
+    status: string;
+    transaction_id: string;
+    energy_used: number;
+    duration: string;
+    port_number: number;
+    port_power: number;
+    theoretical_duration: string;
+    discount_code_id?: number;
+    original_amount?: number;
+}
+
+/**
+ * Pobiera informacje o wszystkich płatnościach użytkownika
+ * @returns Lista płatności lub null w przypadku błędu
+ */
 export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
     try {
         const session = await auth();
         
         if (!session?.user?.apiToken) {
-            console.error("No authentication token available");
             return null;
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
-        console.log('Fetching payments from:', `${baseUrl}/payments`);
-        console.log('Using token:', session.user.apiToken);
-
         const response = await fetch(`${baseUrl}/payments`, {
             method: 'GET',
             headers: {
@@ -40,59 +57,73 @@ export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Payment API Error:', {
-                status: response.status,
-                statusText: response.statusText,
-                body: errorText
-            });
-            throw new Error(`Failed to fetch payments: ${response.status} ${response.statusText}`);
+            throw new Error(`Błąd pobierania płatności: ${response.status}`);
         }
 
-        const payments = await response.json();
-        console.log('Successfully fetched payments:', {
-            count: payments?.length || 0
-        });
-
-        return payments;
+        return await response.json();
 
     } catch (error) {
-        console.error('Error in getPaymentsInfo:', {
-            name: error?.name,
-            message: error instanceof Error ? error.message : String(error)
-        });
-        throw error;
+        return null;
     }
 };
 
-// Add function to create payment
-export const createPayment = async (paymentData: Omit<Payment, 'id' | 'created_at'>): Promise<Payment | null> => {
+/**
+ * Tworzy nową płatność
+ * @param paymentData Dane płatności do utworzenia
+ * @returns Utworzona płatność lub null w przypadku błędu
+ */
+export const createPayment = async (paymentData: PaymentCreate): Promise<Payment | null> => {
     try {
         const session = await auth();
         
         if (!session?.user?.apiToken) {
-            console.error("No authentication token available");
+            console.error('No auth token available');
+            return null;
+        }
+
+        // Get user_id from session and validate it exists
+        const userId = session.user?.id;
+        if (!userId) {
+            console.error('No user id available');
             return null;
         }
 
         const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
         
-        const response = await fetch(`${baseUrl}/payments`, {
+        const fullPaymentData = {
+            ...paymentData,
+            user_id: userId
+        };
+
+        console.log('Creating payment with data:', fullPaymentData);
+
+        const response = await fetch(`${baseUrl}/payments?discount_code_id=${paymentData.discount_code_id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.user.apiToken}`
             },
-            body: JSON.stringify(paymentData)
+            body: JSON.stringify(fullPaymentData)
         });
 
         if (!response.ok) {
-            throw new Error('Failed to create payment record');
+            const errorData = await response.json();
+            console.error('Payment creation failed:', {
+                status: response.status,
+                data: errorData
+            });
+            throw new Error(errorData.detail || 'Błąd tworzenia płatności');
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log("Dane otrzymane od paymentu");
+        console.log(result);
+        return result;
     } catch (error) {
-        console.error('Error creating payment:', error);
-        return null;
+        console.error('Payment creation error:', error);
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error('Wystąpił nieoczekiwany błąd podczas tworzenia płatności');
     }
-}
+};

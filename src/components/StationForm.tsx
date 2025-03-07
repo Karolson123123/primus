@@ -5,17 +5,25 @@ import { createStation } from '@/data/stations';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
-// Define the form data type
+/**
+ * Interfejs danych formularza stacji
+ */
 interface CreateStationData {
     name: string;
     latitude: number;
     longitude: number;
 }
 
+/**
+ * Interfejs właściwości formularza
+ */
 interface StationFormProps {
-  onSuccess?: () => void;
+    onSuccess?: () => void;
 }
 
+/**
+ * Komponent formularza tworzenia nowej stacji ładowania
+ */
 export function StationForm({ onSuccess }: StationFormProps) {
     const [formData, setFormData] = useState<CreateStationData>({
         name: '',
@@ -26,6 +34,9 @@ export function StationForm({ onSuccess }: StationFormProps) {
     const [success, setSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    /**
+     * Obsługa wysłania formularza
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -33,17 +44,16 @@ export function StationForm({ onSuccess }: StationFormProps) {
         setIsSubmitting(true);
         
         try {
-            // Validation
             if (!formData.name.trim()) {
-                setError('Station name is required');
+                setError('Nazwa stacji jest wymagana');
                 return;
             }
             if (formData.latitude === 0) {
-                setError('Latitude is required');
+                setError('Szerokość geograficzna jest wymagana');
                 return;
             }
             if (formData.longitude === 0) {
-                setError('Longitude is required');
+                setError('Długość geograficzna jest wymagana');
                 return;
             }
 
@@ -53,7 +63,6 @@ export function StationForm({ onSuccess }: StationFormProps) {
                 longitude: Number(formData.longitude)
             };
 
-            console.log('Submitting station data:', stationData);
             const result = await createStation(stationData);
             
             if (result) {
@@ -66,12 +75,10 @@ export function StationForm({ onSuccess }: StationFormProps) {
                 });
             }
         } catch (error) {
-            console.error('Station creation error:', error);
-            // Show more specific error message to user
             setError(
                 error instanceof Error 
                     ? error.message 
-                    : 'Server error occurred. Please try again.'
+                    : 'Wystąpił błąd serwera. Spróbuj ponownie.'
             );
         } finally {
             setIsSubmitting(false);
@@ -80,29 +87,28 @@ export function StationForm({ onSuccess }: StationFormProps) {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 p-4">
-            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 sm:p-6 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative">
-                {/* Close button */}
-                
-
-                <h2 className="text-xl max-lg:text-2xl font-semibold mb-4 pr-8">Create a New Station</h2>
+            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 sm:p-6 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-[--text-color] relative">
+                <h2 className="text-xl max-lg:text-2xl font-semibold mb-4 pr-8">
+                    Dodaj nową stację
+                </h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium mb-1">
-                            Station Name *
+                            Nazwa stacji *
                         </label>
                         <Input
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
-                            placeholder="Enter station name"
+                            placeholder="Wprowadź nazwę stacji"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">
-                            Latitude *
+                            Szerokość geograficzna *
                         </label>
                         <Input
                             type="number"
@@ -110,14 +116,14 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
                             required
                             step="any"
-                            placeholder="Enter latitude"
+                            placeholder="Wprowadź szerokość geograficzną"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">
-                            Longitude *
+                            Długość geograficzna *
                         </label>
                         <Input
                             type="number"
@@ -125,7 +131,7 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
                             required
                             step="any"
-                            placeholder="Enter longitude"
+                            placeholder="Wprowadź długość geograficzną"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
@@ -135,7 +141,9 @@ export function StationForm({ onSuccess }: StationFormProps) {
                         <div className="text-red-500 max-lg:text-base text-sm">{error}</div>
                     )}
                     {success && (
-                        <div className="text-green-500 max-lg:text-base text-sm">Station created successfully!</div>
+                        <div className="text-green-500 max-lg:text-base text-sm">
+                            Stacja została utworzona pomyślnie!
+                        </div>
                     )}
 
                     <Button 
@@ -143,7 +151,7 @@ export function StationForm({ onSuccess }: StationFormProps) {
                         disabled={isSubmitting}
                         className="w-full max-lg:text-lg max-lg:p-3"
                     >
-                        {isSubmitting ? 'Creating...' : 'Create Station'}
+                        {isSubmitting ? 'Tworzenie...' : 'Utwórz stację'}
                     </Button>
                 </form>
             </div>

@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 
-
+/**
+ * Pobiera token weryfikacyjny na podstawie tokenu
+ * @param token - Token weryfikacyjny do sprawdzenia
+ * @returns Token weryfikacyjny lub null w przypadku błędu
+ */
 export const getVerificationTokenByToken = async (
     token: string
 ) => {
@@ -15,7 +19,11 @@ export const getVerificationTokenByToken = async (
     }
 }
 
-
+/**
+ * Pobiera token weryfikacyjny na podstawie adresu email
+ * @param email - Adres email użytkownika
+ * @returns Token weryfikacyjny lub null w przypadku błędu
+ */
 export const getVerificationTokenByEmail = async (
     email: string
 ) => {
@@ -29,5 +37,3 @@ export const getVerificationTokenByEmail = async (
         return null;
     }
 }
-
-

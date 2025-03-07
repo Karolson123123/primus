@@ -3,14 +3,27 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Interfejs właściwości przycisku nawigacji mobilnej
+ * @property href - Adres URL do którego kieruje przycisk
+ * @property src - Ścieżka do ikony nawigacji
+ */
 interface NavButtonPhoneProps {
     href: string;
     src: string;
 }
 
+/**
+ * Komponent przycisku nawigacji dla wersji mobilnej
+ * Wyświetla ikonę jako przycisk z animacją kliknięcia
+ */
 const NavButtonPhone = ({ href, src }: NavButtonPhoneProps) => {
     const router = useRouter();
 
+    /**
+     * Obsługa kliknięcia przycisku
+     * Zapobiega domyślnej akcji i przekierowuje do wybranej strony
+     */
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         router.push(href);
@@ -25,7 +38,7 @@ const NavButtonPhone = ({ href, src }: NavButtonPhoneProps) => {
         >
             <Image
                 src={src}
-                alt="Navigation Icon"
+                alt="Ikona nawigacji"
                 width={32}
                 height={32}
                 className="w-10 h-10 invert"

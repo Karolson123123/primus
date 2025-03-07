@@ -6,23 +6,26 @@ import { VehiclesInfo } from '@/components/VehiclesInfo'
 import { VehicleForm } from '@/components/VehicleForm'
 import { Button } from '@/components/ui/button'
 
+// Interfejs opisujący strukturę pojazdu
 interface Vehicle {
   id: number;
   license_plate: string;
   brand: string;
   battery_capacity_kwh: number;
   battery_condition: number;
-  current_battery_capacity_kw: number; // Add this field
+  current_battery_capacity_kw: number;
   max_charging_powerkwh: number;
   created_at: string;
 }
 
+// Główny komponent zarządzania pojazdami
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
 
+  // Pobieranie danych pojazdów przy pierwszym renderowaniu
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
@@ -31,8 +34,7 @@ export default function VehiclesPage() {
           setVehicles(vehicleData);
         }
       } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        setError('Failed to load vehicles. Please try again later.');
+        setError('Nie udało się załadować pojazdów. Spróbuj ponownie później.');
       } finally {
         setLoading(false);
       }
@@ -41,7 +43,7 @@ export default function VehiclesPage() {
   }, []);
 
   if (loading) {
-    return <div>Loading vehicles...</div>
+    return <div>Ładowanie pojazdów...</div>
   }
 
   if (error) {
@@ -51,18 +53,18 @@ export default function VehiclesPage() {
   return (
     <>
       <style jsx global>{`
-        /* Apply yellow border for all elements except those in the navbar */
         *:not(.navbar):not(.navbar *) {
           border-color: var(--yellow) !important;
         }
       `}</style>
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 max-lg:w-full max-lg:mt-20">
         <div className='navbar flex justify-between items-center w-[97%]'>
-          <h1 className="text-2xl font-bold mb-6">Vehicle Management</h1>
+          <h1 className="text-2xl font-bold mb-6">Zarządzanie pojazdami</h1>
           <Button
             onClick={() => setShowForm(prev => !prev)}
-            className={`rounded-full bg-[var(--yellow)] h-12 w-12 flex items-center justify-center transform transition-transform duration-300 z-[10000] ${showForm ? 'rotate-45' : ''}`}
-            aria-label="Toggle Vehicle Form"
+            className={`rounded-full bg-[var(--yellow)] h-12 w-12 flex items-center justify-center 
+                       transform transition-transform duration-300 z-[100] ${showForm ? 'rotate-45' : ''}`}
+            aria-label="Przełącz formularz pojazdu"
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -75,7 +77,7 @@ export default function VehiclesPage() {
             </svg>
           </Button>
         </div>
-        <VehiclesInfo vehicles={vehicles} label='Vehicle Information' />
+        <VehiclesInfo vehicles={vehicles} label='Informacje o pojazdach' />
         {showForm && <VehicleForm />}
       </div>
     </>

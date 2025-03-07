@@ -2,12 +2,20 @@ import NewPasswordForm from "@/components/auth/NewPasswordForm";
 import Logo from "@/components/Logo";
 import Link from "next/link";
 
+/**
+ * Strona zmiany hasła
+ * Wyświetla formularz umożliwiający ustawienie nowego hasła
+ * wraz z walidacją i opcją powrotu do logowania
+ */
 const NewPasswordPage = () => {
     return (
         <>
+            {/* Logo w lewym górnym rogu */}
             <div className="absolute top-4 left-4 z-10">
                 <Logo />
             </div>
+
+            {/* Główny kontener z formularzem zmiany hasła */}
             <div className="grid place-items-center bg-[var(--black)] min-h-screen p-4">
                 <main className="p-4 md:p-8 bg-[var(--cardblack)] rounded-lg 
                     w-[95%] md:w-[70%] lg:w-[50%] 

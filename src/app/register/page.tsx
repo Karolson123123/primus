@@ -2,12 +2,19 @@ import Link from "next/link";
 import RegisterForm from "@/components/auth/RegisterForm";
 import Logo from "@/components/Logo";
 
+/**
+ * Strona rejestracji
+ * Wyświetla formularz rejestracji nowego użytkownika wraz z opcją logowania
+ */
 export default function Register() {
     return (
         <>
+            {/* Logo w lewym górnym rogu */}
             <div className="absolute top-4 left-4 z-10">
                 <Logo />
             </div>
+
+            {/* Główny kontener z formularzem rejestracji */}
             <div className="grid place-items-center bg-[var(--black)] min-h-screen p-4">
                 <main className="p-4 md:p-8 bg-[var(--cardblack)] rounded-lg 
                     w-[95%] md:w-[70%] lg:w-[50%] 

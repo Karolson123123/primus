@@ -1,10 +1,21 @@
 import { FaExclamationTriangle } from "react-icons/fa";
 
+/**
+ * Interfejs właściwości komponentu błędu formularza
+ * @property message - Opcjonalna wiadomość błędu do wyświetlenia
+ */
 interface FormErrorProps {
-    message?: string
+    message?: string;
 }
 
-export const FormError = ({message}: FormErrorProps) => {
+/**
+ * Komponent wyświetlający komunikat błędu w formularzu
+ * Renderuje czerwony alert z ikoną trójkąta i tekstem błędu
+ */
+export const FormError = ({
+    message
+}: FormErrorProps) => {
+    // Jeśli brak wiadomości, nie renderuj niczego
     if (!message) return null;
 
     return (
@@ -12,5 +23,5 @@ export const FormError = ({message}: FormErrorProps) => {
             <FaExclamationTriangle className="h-4 w-4" />
             <p>{message}</p>
         </div>
-    )
-}
+    );
+};

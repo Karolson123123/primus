@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getStationsInfo, deleteStation, updateStation } from "@/data/stations";
 import { useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { getPortsInfo, deletePort, updatePort } from "@/data/ports";
 import { PortForm } from './PortForm';
 import { Input } from '@/components/ui/input';
@@ -15,6 +14,9 @@ import { AdminContent } from "./auth/AdminContent";
 import { UserContent } from "./auth/UserContent";
 import { Search } from "react-feather";
 
+/**
+ * Interfejsy i typy
+ */
 interface Station {
   id: number;
   name: string;
@@ -23,26 +25,28 @@ interface Station {
   status: 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
 }
 
-// Update the Port interface
 interface Port {
   id: number;
   number: number;
   power_kw: number;
-  status: 'wolny' | 'zajety' | 'nieczynny';  // Changed from 'AVAILABLE' | 'IN_USE' | 'OFFLINE'
+  status: 'wolny' | 'zajety' | 'nieczynny';
   station_id: Station[];
 }
 
 interface StationInfoProps {
-    stations?: Station[];
-    label: string;
-    isLoading?: boolean;
+  stations?: Station[];
+  label: string;
+  isLoading?: boolean;
 }
 
-// Add these types after your existing interfaces
 type FilterOption = 'all' | 'active' | 'inactive' | 'maintenance';
 type SortOption = 'alphabetical' | 'availability' | 'ports';
 
+/**
+ * Komponent karty stacji ładowania
+ */
 const StationCard = ({ station }: { station: Station }) => {
+  // Stan komponentu
   const [showDetails, setShowDetails] = useState(false);
   const [ports, setPorts] = useState<Port[]>([]);
   const [selectedPort, setSelectedPort] = useState<Port | null>(null);
@@ -52,34 +56,34 @@ const StationCard = ({ station }: { station: Station }) => {
   const [editStationData, setEditStationData] = useState(station);
   const [editPortData, setEditPortData] = useState<Port | null>(null);
 
-
+  // Pobieranie portów dla stacji
   useEffect(() => {
     const fetchPorts = async () => {
       try {
         const portsData = await getPortsInfo();
-        // Filter ports for this specific station
         const stationPorts = portsData.filter(port => port.station_id === station.id);
         setPorts(stationPorts);
       } catch (error) {
-        console.error('Error fetching ports:', error);
+        // Obsługa błędu
       }
     };
     fetchPorts();
   }, [station.id]);
 
+  /**
+   * Odświeżanie listy portów
+   */
   const refreshPorts = async () => {
     try {
       const portsData = await getPortsInfo();
       const stationPorts = portsData.filter(port => port.station_id === station.id);
       setPorts(stationPorts);
     } catch (error) {
-      console.error('Error refreshing ports:', error);
+      // Obsługa błędu
     }
   };
 
   const toggleDetails = () => setShowDetails((prev) => !prev);
-
- 
 
   const handleDeleteStation = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -179,14 +183,14 @@ const StationCard = ({ station }: { station: Station }) => {
             className="w-8 h-8 sm:w-10 sm:h-10"
           />
           <div className="flex-1">
-            <p className="text-lg sm:text-xl font-bold text-white">
+            <p className="text-lg sm:text-xl font-bold text-[--text-color]">
               {station.name}
             </p>
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                 ports.some(port => port.status === 'wolny') ? 'bg-green-500' : 'bg-red-500'
               }`} />
-              <span className="text-xs sm:text-sm text-gray-400">
+              <span className="text-xs sm:text-sm text-[var(--text-color-lighter)]">
                 {ports.filter(port => port.status === 'wolny').length}/{ports.length} ports available
               </span>
             </div>
@@ -201,7 +205,7 @@ const StationCard = ({ station }: { station: Station }) => {
                 e.stopPropagation();
                 setShowEditStation(true);
               }}
-              className="text-sm sm:text-base text-gray-400 hover:text-white px-2 py-1 
+              className="text-sm sm:text-base text-[var(--text-color-lighter)] hover:text-[--text-color] px-2 py-1 
                 cursor-pointer z-10"
             >
               Edit
@@ -218,6 +222,22 @@ const StationCard = ({ station }: { station: Station }) => {
               Delete
             </button>
           </AdminContent>
+          <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className={`w-4 h-4 sm:w-6 sm:h-6 transform transition-transform duration-150 ${
+            showDetails ? "rotate-180" : ""
+          }`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="white"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
         </div>
       </div>
 
@@ -227,7 +247,7 @@ const StationCard = ({ station }: { station: Station }) => {
       }`}>
         <div className="mt-4 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2">
-            <h3 className="text-base sm:text-lg font-semibold text-white">Charging Ports</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-[--text-color]">Charging Ports</h3>
             <AdminContent>
               <button
                 onClick={(e: React.MouseEvent) => {
@@ -235,7 +255,7 @@ const StationCard = ({ station }: { station: Station }) => {
                   e.stopPropagation();
                   setShowPortForm(true);
                 }}
-                className="text-xs sm:text-sm text-gray-400 hover:text-white px-2 py-1 
+                className="text-xs sm:text-sm text-[var(--text-color-lighter)] hover:text-[--text-color] px-2 py-1 
                   cursor-pointer z-10"
               >
                 Add Port
@@ -253,8 +273,8 @@ const StationCard = ({ station }: { station: Station }) => {
                   setSelectedPort(port.status === 'wolny' ? port : null);
                 }}
                 className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all
-                  ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
-                  ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-gray-800' : ''}
+                  ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--background)]'}
+                  ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-[var(--background)]' : ''}
                 `}
               >
                 <div className="flex items-center justify-between">
@@ -266,8 +286,8 @@ const StationCard = ({ station }: { station: Station }) => {
                     }`} />
                     <div>
                       <div className="text-sm sm:text-base">Port {index + 1}</div>
-                      <div className="text-xs sm:text-sm text-gray-400">{port.power_kw}kW</div>
-                      <div className="text-xs sm:text-sm text-gray-400">Status: {port.status}</div>
+                      <div className="text-xs sm:text-sm text-[var(--text-color-lighter)]">{port.power_kw}kW</div>
+                      <div className="text-xs sm:text-sm text-[var(--text-color-lighter)]">Status: {port.status}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -279,7 +299,7 @@ const StationCard = ({ station }: { station: Station }) => {
                           setShowEditPort(port.id);
                           setEditPortData(port);
                         }}
-                        className="text-xs sm:text-sm text-gray-400 hover:text-white px-2 py-1 
+                        className="text-xs sm:text-sm text-[var(--text-color-lighter)] hover:text-[--text-color] px-2 py-1 
                           cursor-pointer z-10"
                       >
                         Edit
@@ -311,7 +331,7 @@ const StationCard = ({ station }: { station: Station }) => {
                   text-base sm:text-xl font-semibold ${
                   selectedPort 
                     ? 'bg-[var(--yellow)] hover:bg-yellow-600' 
-                    : 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-[var(--background)] cursor-not-allowed'
                 }`}
                 disabled={!selectedPort}
               >
@@ -331,25 +351,25 @@ const StationCard = ({ station }: { station: Station }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-[var(--cardblack)] p-6 rounded-lg border border-[var(--yellow)] w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Edit Station</h2>
+              <h2 className="text-xl font-bold text-[--text-color]">Edit Station</h2>
               <button 
                 onClick={() => setShowEditStation(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-[var(--text-color-lighter)] hover:text-[--text-color]"
               >
                 ✕
               </button>
             </div>
             <form onSubmit={handleUpdateStation} className="space-y-4">
               <div>
-                <label className="text-white block mb-2">Name</label>
+                <label className="text-[--text-color] block mb-2">Name</label>
                 <Input 
                   value={editStationData.name}
                   onChange={(e) => setEditStationData({...editStationData, name: e.target.value})}
-                  className="bg-gray-700 text-white w-full"
+                  className="bg-[var(--background)] text-[--text-color] w-full"
                 />
               </div>
               <div>
-                <label className="text-white block mb-2">Status</label>
+                <label className="text-[--text-color] block mb-2">Status</label>
                 <Select 
                   value={editStationData.status}
                   onValueChange={(value) => setEditStationData({
@@ -378,28 +398,28 @@ const StationCard = ({ station }: { station: Station }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-[var(--cardblack)] p-6 rounded-lg border border-[var(--yellow)] w-[90%] max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Edit Port</h2>
+              <h2 className="text-xl font-bold text-[--text-color]">Edit Port</h2>
               <button 
                 onClick={() => setShowEditPort(null)}
-                className="text-gray-400 hover:text-white"
+                className="text-[var(--text-color-lighter)] hover:text-[--text-color]"
               >
                 ✕
               </button>
             </div>
             <form onSubmit={handleUpdatePort} className="space-y-4">
               <div>
-                <label className="text-white block mb-2">Power (kW)</label>
+                <label className="text-[--text-color] block mb-2">Power (kW)</label>
                 <Input 
                   type="number"
                   value={editPortData?.power_kw || ''}
                   onChange={(e) => setEditPortData(prev => 
                     prev ? {...prev, power_kw: Number(e.target.value)} : null
                   )}
-                  className="bg-gray-700 text-white w-full"
+                  className="bg-[var(--background)] text-[--text-color] w-full"
                 />
               </div>
               <div>
-                <label className="text-white block mb-2">Status</label>
+                <label className="text-[--text-color] block mb-2">Status</label>
                 <Select 
                   value={editPortData?.status}
                   onValueChange={(value) => setEditPortData(prev => 
@@ -439,210 +459,209 @@ const StationCard = ({ station }: { station: Station }) => {
   );
 };
 
-// Update the StationsInfo component
+/**
+ * Główny komponent listy stacji
+ */
 export const StationsInfo = ({
-    stations = [],
-    label,
-    isLoading = false,
+  stations = [],
+  label,
+  isLoading = false,
 }: StationInfoProps) => {
-    const [displayCount, setDisplayCount] = useState(5);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filterBy, setFilterBy] = useState<FilterOption>('all');
-    const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
+  // Stan komponentu
+  const [displayCount, setDisplayCount] = useState(5);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterBy, setFilterBy] = useState<FilterOption>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('alphabetical');
 
-    // Add filter and sort function
-    const filterAndSortStations = useCallback((stationsToProcess: Station[]) => {
-        let filtered = stationsToProcess.filter(station => {
-            // Search filter
-            const matchesSearch = searchQuery === '' || 
-                station.name.toLowerCase().includes(searchQuery.toLowerCase());
+  /**
+   * Filtrowanie i sortowanie stacji
+   */
+  const filterAndSortStations = useCallback((stationsToProcess: Station[]) => {
+    const filtered = stationsToProcess.filter(station => {
+      const matchesSearch = searchQuery === '' || 
+        station.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-            // Status filter with null check and type guard
-            const matchesFilter = filterBy === 'all' ? true :
-                station.status?.toLowerCase() === filterBy || 
-                (station.status && station.status.toLowerCase() === filterBy);
+      const matchesFilter = filterBy === 'all' ? true :
+        station.status?.toLowerCase() === filterBy || 
+        (station.status && station.status.toLowerCase() === filterBy);
 
-            return matchesSearch && matchesFilter;
-        });
+      return matchesSearch && matchesFilter;
+    });
 
-        // Sort stations
-        return filtered.sort((a, b) => {
-            switch (sortBy) {
-                case 'alphabetical':
-                    return a.name.localeCompare(b.name);
-                case 'availability':
-                    // Sort by status with null checks
-                    if (!a.status && !b.status) return 0;
-                    if (!a.status) return 1;
-                    if (!b.status) return -1;
-                    return a.status === 'ACTIVE' ? -1 : b.status === 'ACTIVE' ? 1 : 0;
-                default:
-                    return 0;
-            }
-        });
-    }, [searchQuery, filterBy, sortBy]);
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'alphabetical':
+          return a.name.localeCompare(b.name);
+        case 'availability':
+          if (!a.status && !b.status) return 0;
+          if (!a.status) return 1;
+          if (!b.status) return -1;
+          return a.status === 'ACTIVE' ? -1 : b.status === 'ACTIVE' ? 1 : 0;
+        default:
+          return 0;
+      }
+    });
+  }, [searchQuery, filterBy, sortBy]);
 
-    // Move this inside the component
-    const handleLoadMore = useCallback(() => {
-        setDisplayCount(prevCount => {
-            const nextCount = prevCount + 5;
-            return nextCount > stations.length ? stations.length : nextCount;
-        });
-    }, [stations.length]);
+  // Move this inside the component
+  const handleLoadMore = useCallback(() => {
+    setDisplayCount(prevCount => {
+      const nextCount = prevCount + 5;
+      return nextCount > stations.length ? stations.length : nextCount;
+    });
+  }, [stations.length]);
 
-    if (isLoading) {
-        return (
-            <Card className="bg-[var(--cardblack)] w-[90%]">
-                <CardHeader>
-                    <p className="text-2xl font-semibold text-center text-white">
-                        {label}
-                    </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="animate-pulse space-y-4">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-24 bg-gray-700 rounded-lg" />
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-        );
-    }
-
-    // Get the stations to display based on current displayCount
-    const displayedStations = stations.slice(0, displayCount);
-    const remainingCount = stations.length - displayCount;
-    const hasMore = remainingCount > 0;
-
-    // Update the return statement to include search and filters
+  if (isLoading) {
     return (
-        <Card className="bg-[var(--cardblack)] w-full border border-[var(--yellow)]">
-            <CardHeader>
-                <div className="flex flex-col gap-4">
-                    <p className="text-2xl font-semibold text-center text-white">
-                        {label}
-                    </p>
-                    
-                    {/* Search and Filters */}
-                    <div className="flex flex-col md:flex-row gap-4">
-                        {/* Search Box */}
-                        <div className="relative flex-1">
-                            <Input
-                                type="text"
-                                placeholder="Search stations..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-gray-700 text-white border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
-                            />
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        </div>
-
-                        {/* Filter Dropdown */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Status:</span>
-                            <select
-                                value={filterBy}
-                                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
-                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
-                            >
-                                <option value="all">All Stations</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="maintenance">Maintenance</option>
-                            </select>
-                        </div>
-
-                        {/* Sort Dropdown */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Sort by:</span>
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="bg-gray-700 text-white px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
-                            >
-                                <option value="alphabetical">Alphabetical</option>
-                                <option value="availability">Availability</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {filterAndSortStations(stations)
-                        .slice(0, displayCount)
-                        .map((station) => (
-                            <StationCard key={station.id} station={station} />
-                        ))}
-                </div>
-                
-                {filterAndSortStations(stations).length > displayCount && (
-                    <div className="flex justify-center mt-6">
-                        <button 
-                            onClick={handleLoadMore}
-                            className="bg-[var(--yellow)] hover:bg-yellow-600 text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <span>Loading...</span>
-                            ) : (
-                                <span>Load More ({filterAndSortStations(stations).length - displayCount} remaining)</span>
-                            )}
-                        </button>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+      <Card className="bg-[var(--cardblack)] w-[90%]">
+        <CardHeader>
+          <p className="text-2xl font-semibold text-center text-[--text-color]">
+            {label}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="animate-pulse space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-[var(--background)] rounded-lg" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
+  }
+
+  // Update the return statement to include search and filters
+  return (
+    <Card className="bg-[var(--cardblack)] w-full border border-[var(--yellow)]">
+      <CardHeader>
+        <div className="flex flex-col gap-4">
+          <p className="text-2xl font-semibold text-center text-[--text-color]">
+            {label}
+          </p>
+          
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search Box */}
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Wyszukaj stacje..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-[var(--background)] text-[--text-color] border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-color-lighter)] w-4 h-4" />
+            </div>
+
+            {/* Filter Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--text-color-lighter)]">Status:</span>
+              <select
+                value={filterBy}
+                onChange={(e) => setFilterBy(e.target.value as FilterOption)}
+                className="bg-[var(--background)] text-[--text-color] px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+              >
+                <option value="all">Wszystkie stacje</option>
+                <option value="active">Aktywne</option>
+                <option value="inactive">Nieaktywne</option>
+                <option value="maintenance">W konserwacji</option>
+              </select>
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--text-color-lighter)]">Sortuj według:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="bg-[var(--background)] text-[--text-color] px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+              >
+                <option value="alphabetical">Alfabetycznie</option>
+                <option value="availability">Dostępność</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {filterAndSortStations(stations)
+            .slice(0, displayCount)
+            .map((station) => (
+              <StationCard key={station.id} station={station} />
+            ))}
+        </div>
+        
+        {filterAndSortStations(stations).length > displayCount && (
+          <div className="flex justify-center mt-6">
+            <button 
+              onClick={handleLoadMore}
+              className="bg-[var(--yellow)] hover:bg-yellow-600 text-black font-medium px-6 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span>Loading...</span>
+              ) : (
+                <span>Load More ({filterAndSortStations(stations).length - displayCount} remaining)</span>
+              )}
+            </button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
+/**
+ * Strona stacji ładowania
+ */
 const StationsPage = () => {
-    const [stations, setStations] = useState<Station[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [stations, setStations] = useState<Station[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchStations = async () => {
-            try {
-                setIsLoading(true);
-                const data = await getStationsInfo();
-                if (Array.isArray(data)) {
-                    setStations(data);
-                } else {
-                    setError('Invalid data format received');
-                }
-            } catch (error) {
-                console.error("Error fetching stations:", error);
-                setError('Failed to load stations. Please try again later.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getStationsInfo();
+        if (Array.isArray(data)) {
+          setStations(data);
+        } else {
+          setError('Invalid data format received');
+        }
+      } catch (error) {
+        console.error("Error fetching stations:", error);
+        setError('Failed to load stations. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-        fetchStations();
-    }, []);
+    fetchStations();
+  }, []);
 
-    if (isLoading) {
-        return <div className="text-white">Loading stations...</div>;
-    }
+  if (isLoading) {
+    return <div className="text-[--text-color]">Loading stations...</div>;
+  }
 
-    if (error) {
-        return <div className="text-red-500">{error}</div>;
-    }
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
 
-    return (
-        <div className="w-full flex justify-center items-center min-h-screen">
-            {stations.length === 0 ? (
-                <div className="text-white">No stations found</div>
-            ) : (
-                <StationsInfo 
-                    label="Charging Stations"
-                    stations={stations}
-                    isLoading={isLoading}
-                />
-            )}
-        </div>
-    );
+  return (
+    <div className="w-full flex justify-center items-center min-h-screen">
+      {stations.length === 0 ? (
+        <div className="text-[--text-color]">No stations found</div>
+      ) : (
+        <StationsInfo 
+          label="Charging Stations"
+          stations={stations}
+          isLoading={isLoading}
+        />
+      )}
+    </div>
+  );
 };
 
 export default StationsPage;

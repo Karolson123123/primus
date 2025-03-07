@@ -5,7 +5,13 @@ import { useEffect } from "react";
 import Logo from "@/components/Logo";
 import Link from "next/link";
 
+/**
+ * Strona logowania
+ * Wyświetla formularz logowania wraz z opcją rejestracji nowego konta
+ */
 export default function Login() {
+    // Efekt wymuszający jednokrotne przeładowanie strony przy pierwszym renderowaniu
+    // Zapobiega problemom z hydracją komponentów
     useEffect(() => {
         const hasReloaded = sessionStorage.getItem("hasReloaded");
         if (!hasReloaded) {
@@ -18,9 +24,12 @@ export default function Login() {
     
     return (
         <>
+            {/* Logo w lewym górnym rogu */}
             <div className="absolute top-4 left-4 z-10">
                 <Logo />
             </div>
+
+            {/* Główny kontener z formularzem logowania */}
             <div className="grid place-items-center bg-[var(--black)] min-h-screen p-4">
                 <main className="p-4 md:p-8 bg-[var(--cardblack)] rounded-lg 
                     w-[95%] md:w-[70%] lg:w-[50%] 

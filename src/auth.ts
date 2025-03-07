@@ -4,9 +4,11 @@ import { db } from "@/lib/db";
 import authConfig from "@/auth.config";
 import NextAuth, { type DefaultSession } from "next-auth"
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
-
 import { SignJWT } from 'jose';
 
+/**
+ * Interfejs pojazdu użytkownika
+ */
 interface Vehicle {
     id: number;
     license_plate: string;
@@ -18,10 +20,14 @@ interface Vehicle {
     user_id: number;
 }
 
-
+/**
+ * Generuje token JWT dla użytkownika
+ * @param userId - ID użytkownika
+ * @returns Token JWT
+ */
 const generateJWT = async (userId: string) => {
     if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET is not configured");
+        throw new Error("Brak skonfigurowanego klucza JWT");
     }
     
     try {
@@ -29,7 +35,7 @@ const generateJWT = async (userId: string) => {
         const token = await new SignJWT({
             sub: userId,
             iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // Ważny 24h
             type: 'access_token',
             jti: crypto.randomUUID()
         })
@@ -42,6 +48,9 @@ const generateJWT = async (userId: string) => {
     }
 };
 
+/**
+ * Rozszerzony typ użytkownika z dodatkowymi polami
+ */
 export type ExtendedUser = DefaultSession["user"] & {
     role: "ADMIN" | "USER",
     isTwoFactorEnabled: boolean,
@@ -67,38 +76,35 @@ export const {
         error: "/auth/error"
     },
     events: {
-       async linkAccount({ user }){
-        await db.user.update({
-            where: { id: user.id },
-            data: { emailVerified: new Date() }
-        })
-       }
+        // Aktualizacja daty weryfikacji email po połączeniu konta
+        async linkAccount({ user }){
+            await db.user.update({
+                where: { id: user.id },
+                data: { emailVerified: new Date() }
+            })
+        }
     },
     callbacks: {
+        // Sprawdzanie czy użytkownik może się zalogować
         async signIn({ user, account }) {
-            
-
             if (account?.provider !== "credentials") return true;
 
             const existingUser = await getUserById(user.id);
-
             if (!existingUser?.emailVerified) return false;
             
             if (existingUser.isTwoFactorEnabled) {
                 const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(existingUser.id);
-
                 if (!twoFactorConfirmation) return false;
                 
                 await db.twoFactorConfirmation.delete({
                     where: { id: twoFactorConfirmation.id }
                 });
-
-                
             }
             
             return true;  
         },
         
+        // Rozszerzanie tokenu JWT o dodatkowe dane
         async jwt({ token, user, account, trigger }) {
             if (user) {
                 const existingUser = await getUserById(user.id);
@@ -128,6 +134,7 @@ export const {
             };
         },
 
+        // Aktualizacja danych sesji na podstawie tokenu
         async session({ token, session }) {
             if (session.user) {
                 session.user.id = token.sub as string;
@@ -143,7 +150,7 @@ export const {
         }
     },
     adapter: PrismaAdapter(db),
-    session: {strategy: "jwt"},
+    session: { strategy: "jwt" },
     ...authConfig
 });
 

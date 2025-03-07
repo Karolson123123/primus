@@ -6,19 +6,35 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { createPort } from '@/data/ports';
-import { auth } from "@/auth";
 
-// Define the form data type
+/**
+ * Interfejsy dla danych formularzy
+ */
 interface CreateStationData {
     name: string;
     latitude: number;
     longitude: number;
 }
 
-interface StationFormProps {
-  onSuccess?: () => void;
+interface CreatePortData {
+    station_id: number;
+    power_kw: number;
+    status: 'wolny' | 'zajety' | 'nieczynny';
 }
 
+interface StationFormProps {
+    onSuccess?: () => void;
+}
+
+interface PortFormProps {
+    stationId: number;
+    onSuccess?: () => void;
+    onClose: () => void;
+}
+
+/**
+ * Komponent formularza dodawania stacji ładowania
+ */
 export function StationForm({ onSuccess }: StationFormProps) {
     const [formData, setFormData] = useState<CreateStationData>({
         name: '',
@@ -36,45 +52,34 @@ export function StationForm({ onSuccess }: StationFormProps) {
         setIsSubmitting(true);
         
         try {
-            // Validation
             if (!formData.name.trim()) {
-                setError('Station name is required');
+                setError('Nazwa stacji jest wymagana');
                 return;
             }
             if (formData.latitude === 0) {
-                setError('Latitude is required');
+                setError('Szerokość geograficzna jest wymagana');
                 return;
             }
             if (formData.longitude === 0) {
-                setError('Longitude is required');
+                setError('Długość geograficzna jest wymagana');
                 return;
             }
 
-            const stationData = {
+            const result = await createStation({
                 name: formData.name.trim(),
                 latitude: Number(formData.latitude),
                 longitude: Number(formData.longitude)
-            };
-
-            console.log('Submitting station data:', stationData);
-            const result = await createStation(stationData);
+            });
             
             if (result) {
                 setSuccess(true);
                 onSuccess?.();
-                setFormData({
-                    name: '',
-                    latitude: 0,
-                    longitude: 0
-                });
+                setFormData({ name: '', latitude: 0, longitude: 0 });
             }
         } catch (error) {
-            console.error('Station creation error:', error);
-            // Show more specific error message to user
-            setError(
-                error instanceof Error 
-                    ? error.message 
-                    : 'Server error occurred. Please try again.'
+            setError(error instanceof Error 
+                ? error.message 
+                : 'Wystąpił błąd serwera. Spróbuj ponownie.'
             );
         } finally {
             setIsSubmitting(false);
@@ -82,43 +87,29 @@ export function StationForm({ onSuccess }: StationFormProps) {
     };
 
     return (
-        <div 
-            className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50"
-            onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-        >
-            <div 
-                className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }}
-            >
-                <h2 className="text-xl max-lg:text-2xl font-semibold mb-4">Create a New Station</h2>
-                <form 
-                    onSubmit={handleSubmit} 
-                    className="space-y-4"
-                    onClick={(e) => e.stopPropagation()}
-                >
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50">
+            <div className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative">
+                <h2 className="text-xl max-lg:text-2xl font-semibold mb-4">
+                    Dodaj nową stację
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium">
-                            Station Name *
+                            Nazwa stacji *
                         </label>
                         <Input
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
-                            placeholder="Enter station name"
+                            placeholder="Wprowadź nazwę stacji"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium">
-                            Latitude *
+                            Szerokość geograficzna *
                         </label>
                         <Input
                             type="number"
@@ -126,14 +117,14 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
                             required
                             step="any"
-                            placeholder="Enter latitude"
+                            placeholder="Wprowadź szerokość geograficzną"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium">
-                            Longitude *
+                            Długość geograficzna *
                         </label>
                         <Input
                             type="number"
@@ -141,25 +132,25 @@ export function StationForm({ onSuccess }: StationFormProps) {
                             onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
                             required
                             step="any"
-                            placeholder="Enter longitude"
+                            placeholder="Wprowadź długość geograficzną"
                             className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                             disabled={isSubmitting}
                         />
                     </div>
-
                     {error && (
                         <div className="text-red-500 max-lg:text-base text-sm">{error}</div>
                     )}
                     {success && (
-                        <div className="text-green-500 max-lg:text-base text-sm">Station created successfully!</div>
+                        <div className="text-green-500 max-lg:text-base text-sm">
+                            Stacja została utworzona pomyślnie!
+                        </div>
                     )}
-
                     <Button 
                         type="submit" 
                         disabled={isSubmitting}
                         className="w-full max-lg:text-lg max-lg:p-3"
                     >
-                        {isSubmitting ? 'Creating...' : 'Create Station'}
+                        {isSubmitting ? 'Tworzenie...' : 'Utwórz stację'}
                     </Button>
                 </form>
             </div>
@@ -167,20 +158,9 @@ export function StationForm({ onSuccess }: StationFormProps) {
     );
 }
 
-interface CreatePortData {
-    station_id: number;
-    power_kw: number;
-    status: 'wolny' | 'zajety' | 'nieczynny';
-}
-
-// Add onClose to the PortFormProps interface
-interface PortFormProps {
-    stationId: number;
-    onSuccess?: () => void;
-    onClose: () => void;  // Add this line
-}
-
-// Update the PortForm component to accept onClose
+/**
+ * Komponent formularza dodawania portu ładowania
+ */
 export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
     const [formData, setFormData] = useState<CreatePortData>({
         station_id: stationId,
@@ -193,50 +173,29 @@ export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await createPort({
                 station_id: stationId,
                 power_kw: formData.power_kw,
-                status: formData.status || 'wolny'
+                status: formData.status
             });
+            setSuccess(true);
             onSuccess?.();
         } catch (error) {
-            console.error('Error creating port:', error);
-            setError(error instanceof Error ? error.message : 'Failed to create port');
+            setError(error instanceof Error ? error.message : 'Nie udało się utworzyć portu');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <>
-            {/* Backdrop */}
-            <div 
-                className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onClose();
-                }}
-            />
-            {/* Modal */}
-            <div 
-                className="fixed inset-0 flex items-center justify-center z-50"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }}
-            >
-                <div 
-                    className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                    }}
-                >
-                    {/* Add close button */}
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={onClose} />
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-[var(--cardblack)] border border-gray-200 p-4 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative">
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onClose();
-                        }}
+                        onClick={onClose}
                         className="absolute top-2 right-2 text-gray-400 hover:text-white"
                     >
                         <svg
@@ -254,15 +213,13 @@ export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
                             />
                         </svg>
                     </button>
-                    <h2 className="text-xl max-lg:text-2xl font-semibold mb-4">Create a New Port</h2>
-                    <form 
-                        onSubmit={handleSubmit} 
-                        className="space-y-4"
-                        onClick={(e) => e.stopPropagation()}
-                    >
+                    <h2 className="text-xl max-lg:text-2xl font-semibold mb-4">
+                        Dodaj nowy port
+                    </h2>
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium">
-                                Power (kW) *
+                                Moc (kW) *
                             </label>
                             <Input
                                 type="number"
@@ -271,7 +228,7 @@ export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
                                 required
                                 min="0"
                                 step="0.1"
-                                placeholder="Enter power in kW"
+                                placeholder="Wprowadź moc w kW"
                                 className="mt-1 block rounded-md border-gray-300 shadow-sm max-lg:text-lg max-lg:p-3"
                                 disabled={isSubmitting}
                             />
@@ -282,11 +239,14 @@ export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
                             </label>
                             <Select
                                 defaultValue={formData.status}
-                                onValueChange={(value) => setFormData({ ...formData, status: value as 'wolny' | 'zajety' | 'nieczynny' })}
+                                onValueChange={(value) => setFormData({ 
+                                    ...formData, 
+                                    status: value as 'wolny' | 'zajety' | 'nieczynny' 
+                                })}
                                 disabled={isSubmitting}
                             >
                                 <SelectTrigger className="w-full max-lg:text-lg max-lg:p-3">
-                                    <SelectValue placeholder="Select status" />
+                                    <SelectValue placeholder="Wybierz status" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="wolny">Wolny</SelectItem>
@@ -300,7 +260,9 @@ export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
                             <div className="text-red-500 max-lg:text-base text-sm">{error}</div>
                         )}
                         {success && (
-                            <div className="text-green-500 max-lg:text-base text-sm">Port created successfully!</div>
+                            <div className="text-green-500 max-lg:text-base text-sm">
+                                Port został utworzony pomyślnie!
+                            </div>
                         )}
 
                         <Button 
@@ -308,7 +270,7 @@ export function PortForm({ stationId, onSuccess, onClose }: PortFormProps) {
                             disabled={isSubmitting}
                             className="w-full max-lg:text-lg max-lg:p-3"
                         >
-                            {isSubmitting ? 'Creating...' : 'Create Port'}
+                            {isSubmitting ? 'Tworzenie...' : 'Utwórz port'}
                         </Button>
                     </form>
                 </div>

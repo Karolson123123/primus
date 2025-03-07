@@ -22,19 +22,23 @@ import Socials from "@/components/auth/Socials";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-
-
+/**
+ * Komponent formularza logowania
+ * Obsługuje logowanie przez email/hasło oraz uwierzytelnianie dwuetapowe
+ */
 export default function LoginForm() {
     const searchParams = useSearchParams();
-    const urlError = searchParams.get("error") === "OAuthAccountNotLinked" ? "Email jest już za pomocą innej platformy!" : "";
+    const urlError = searchParams.get("error") === "OAuthAccountNotLinked" 
+        ? "Email jest już powiązany z inną metodą logowania!" 
+        : "";
 
-
+    // Stan komponentu
     const [showTwoFactor, setShowTwoFactor] = useState(false);
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
-    
     const [isPending, startTransition] = useTransition();
 
+    // Inicjalizacja formularza z walidacją
     const form = useForm<z.infer<typeof LoginSchema>>({
         resolver: zodResolver(LoginSchema),
         defaultValues: {
@@ -44,6 +48,10 @@ export default function LoginForm() {
         }
     });
 
+    /**
+     * Obsługa wysłania formularza
+     * Przeprowadza proces logowania i obsługuje uwierzytelnianie dwuetapowe
+     */
     const onSubmit = (values: z.infer<typeof LoginSchema>) => {
         setError("");
         setSuccess("");
@@ -55,49 +63,41 @@ export default function LoginForm() {
                         form.reset();
                         setError(data.error);
                     }
-
                     if (data?.success) {
                         form.reset();
                         setSuccess(data.success);
                     }
-
                     if (data?.twoFactor) {
                         setShowTwoFactor(true);
                     }
-
                 })
-                .catch(() => setError("Coś poszło nie tak!"));
-    });
+                .catch(() => setError("Wystąpił błąd podczas logowania"));
+        });
     }
 
     return (
-        <>
-            
-
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
-                    <div className="space-y-4">
-                        {showTwoFactor && (
-                            <FormField
-                                control={form.control}
-                                name="code"
-                                render={({field}) => (
-                                    <FormItem>
-                                        <FormLabel>Kod uwierzytelniania dwuetapowego</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    disabled={isPending}
-                                                    placeholder="123456" 
-                                                    
-                                                    />
-                                            </FormControl>
-                                            <FormMessage></FormMessage>
-                                    </FormItem>
-                                )}
-                            />
-                        )}
-                        {!showTwoFactor && (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+                <div className="space-y-4">
+                    {showTwoFactor ? (
+                        <FormField
+                            control={form.control}
+                            name="code"
+                            render={({field}) => (
+                                <FormItem>
+                                    <FormLabel>Kod uwierzytelniania dwuetapowego</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            {...field}
+                                            disabled={isPending}
+                                            placeholder="123456"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    ) : (
                         <>
                             <FormField
                                 control={form.control}
@@ -105,15 +105,15 @@ export default function LoginForm() {
                                 render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Email</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    disabled={isPending}
-                                                    placeholder="primus@ngineers.pl" 
-                                                    type = "email"
-                                                    />
-                                            </FormControl>
-                                            <FormMessage></FormMessage>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                disabled={isPending}
+                                                placeholder="primus@ngineers.pl"
+                                                type="email"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
@@ -123,38 +123,38 @@ export default function LoginForm() {
                                 render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Hasło</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    disabled={isPending}
-                                                    placeholder="*******" 
-                                                    type = "password"
-                                                    />
-                                            </FormControl>
-                                            <Button 
-                                                size="sm"
-                                                variant="link"
-                                                asChild
-                                                className="text-white px-0 "
-                                            >
-                                                <Link href="reset">Nie pamiętasz hasła?</Link>
-
-                                            </Button>
-                                            <FormMessage></FormMessage>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                disabled={isPending}
+                                                placeholder="********"
+                                                type="password"
+                                            />
+                                        </FormControl>
+                                        <Button 
+                                            size="sm"
+                                            variant="link"
+                                            asChild
+                                            className="text-white px-0"
+                                        >
+                                            <Link href="reset">Nie pamiętasz hasła?</Link>
+                                        </Button>
+                                        <FormMessage />
                                     </FormItem>
                                 )}
                             />
                         </>
-                        )}
-                    </div>
-                    
-                    <FormError message={error || urlError}></FormError>
-                    <FormSuccess message={success}></FormSuccess>
-                    
-                    <Button disabled={isPending}>{showTwoFactor ? "Confirm" : "Login"}</Button>
-                    <Socials></Socials>
-                </form>
-            </Form>
-        </>
-    )
-};
+                    )}
+                </div>
+                
+                <FormError message={error || urlError} />
+                <FormSuccess message={success} />
+                
+                <Button disabled={isPending}>
+                    {showTwoFactor ? "Potwierdź" : "Zaloguj się"}
+                </Button>
+                <Socials />
+            </form>
+        </Form>
+    );
+}

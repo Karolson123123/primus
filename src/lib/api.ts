@@ -1,10 +1,17 @@
 import { auth } from "@/auth";
 
+/**
+ * Wykonuje uwierzytelnione żądanie do API
+ * @param endpoint - Ścieżka końcowa API
+ * @param options - Opcje żądania fetch
+ * @returns Odpowiedź z API w formacie JSON
+ * @throws Error gdy brak tokenu uwierzytelniającego lub błąd API
+ */
 export async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
   const session = await auth();
   
   if (!session?.user?.apiToken) {
-    throw new Error("No authentication token available");
+    throw new Error("Brak dostępnego tokenu uwierzytelniającego");
   }
 
   const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`;
@@ -18,7 +25,7 @@ export async function authenticatedFetch(endpoint: string, options: RequestInit 
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`);
+    throw new Error(`Błąd żądania API: ${response.statusText}`);
   }
 
   return response.json();

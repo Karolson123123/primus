@@ -6,6 +6,42 @@
 
 @layer base {
   :root {
+    --background: rgb(220, 220, 220); 
+    --foreground: 222.2 84% 4.9%;
+    --card: rgb(230, 230, 230); 
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: rgb(230, 230, 230);
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 12.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 12.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 12.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --yellow: #be8c02;
+    --darkeryellow: #8f6900;
+    --cardblack: rgb(230, 230, 230); 
+    --black: rgb(220, 220, 220);     
+    --transition-duration: 0.3s;
+    --text-color: #000;
+    --text-color-lighter: rgb(63, 63, 63);
+
+  }
+
+  .dark {
     --background: rgb(20, 20, 20);
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -35,42 +71,20 @@
     --darkeryellow:#8f6900;
     --cardblack: #1a1919;
     --black: #0e0d0d;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 12.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --transition-duration: 0.3s;
+    --text-color: #fff;
+    --text-color-lighter: rgb(205, 205, 205);
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    transition: border-color var(--transition-duration), background-color var(--transition-duration);
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color var(--transition-duration), color var(--transition-duration);
   }
 }
 
@@ -236,18 +250,16 @@ input[type="radio"]:checked {
   border: 2px solid var(--yellow);
 }
 
-/* Remove the inner circle and make the whole radio button filled */
+
 input[type="radio"]:checked::after {
   display: none;
 }
 
-/* Focus states */
 input[type="radio"]:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--darkeryellow);
 }
 
-/* Hover states */
 input[type="radio"]:hover {
   border-color: var(--darkeryellow);
 }
@@ -257,7 +269,7 @@ input[type="radio"]:checked:hover {
   border-color: var(--darkeryellow);
 }
 
-/* Custom Checkbox */
+
 input[type="checkbox"] {
   appearance: none;
   width: 2.2rem;
@@ -281,13 +293,12 @@ input[type="checkbox"]:checked::after {
   border-width: 0 2px 2px 0;
 }
 
-/* Focus states */
+
 input[type="radio"]:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--darkeryellow);
 }
 
-/* Hover states */
 input[type="radio"]:hover {
   border-color: var(--darkeryellow);
 }

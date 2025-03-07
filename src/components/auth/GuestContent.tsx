@@ -2,27 +2,29 @@
 
 import { useCurrentRole } from "@/hooks/use-current-role";
 
-
-
-
-interface LoggedInProps {
+/**
+ * Interfejs określający props komponentu
+ * @property children - Elementy potomne do wyrenderowania
+ */
+interface GuestContentProps {
     children: React.ReactNode;
-};
+}
 
+/**
+ * Komponent warunkowego renderowania treści dla niezalogowanych użytkowników
+ * Wyświetla zawartość tylko dla gości (użytkowników bez przypisanej roli)
+ */
 export const GuestContent = ({
     children,
-}: LoggedInProps)  => {
+}: GuestContentProps) => {
+    // Pobranie roli aktualnie zalogowanego użytkownika
     const role = useCurrentRole();
 
+    // Renderowanie treści tylko dla niezalogowanych użytkowników
     if (!role) {
-        return (
-            <>
-                {children}
-            </>
-        )
+        return <>{children}</>;
     }
 
-    
-
-    
+    // Dla zalogowanych użytkowników nie renderuj niczego
+    return null;
 };

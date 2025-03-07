@@ -116,6 +116,10 @@ const updateCurrentCost = (energyUsed: number): number => {
   return Number((energyUsed * COST_PER_KWH).toFixed(2));
 };
 
+/**
+ * Główny komponent strony ładowania
+ * Zarządza procesem ładowania pojazdu, wyświetla stan baterii i pozwala na kontrolę sesji
+ */
 export default function ChargingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -481,21 +485,6 @@ useEffect(() => {
     }
   };
 
-  // Add this helper function to validate session response
-  // function isValidChargingSession(session: ChargingSession): session is ChargingSession {
-  //   return (
-  //     session &&
-  //     typeof session === 'object' &&
-  //     typeof session.id === 'number' &&
-  //     typeof session.vehicle_id === 'number' &&
-  //     typeof session.port_id === 'number' &&
-  //     typeof session.start_time === 'string' &&
-  //     (session.end_time === null || typeof session.end_time === 'string') &&
-  //     typeof session.energy_used_kwh === 'number' &&
-  //     typeof session.total_cost === 'number' &&
-  //     (session.status === 'IN_PROGRESS' || session.status === 'COMPLETED')
-  //   );
-  // }
 
   
 
@@ -820,8 +809,8 @@ useEffect(() => {
 }, [duration, chargeMode, selectedPort?.power_kw, selectedVehicle?.max_charging_powerkwh, selectedPort, selectedVehicle]);
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold text-white mb-6">Start Charging Session</h1>
+    <div className="container mx-auto py-6 px-4 max-lg:w-full max-lg:mt-20">
+      <h1 className="text-3xl font-bold text-[--text-color] mb-6 text-[--text-color]">Rozpocznij sesję ładowania</h1>
       {error && (
         <div className="p-4 mb-6 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
             {error}
@@ -830,21 +819,21 @@ useEffect(() => {
 
       {/* Vehicle Select Container (shown initially when there is no selected vehicle) */}
       {!selectedVehicle && (
-        <div className="mb-6 p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)]">
-          <label htmlFor="vehicle" className="block text-sm font-medium text-gray-300">
-            Select Vehicle
+        <div className="mb-6 p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)]">
+          <label htmlFor="vehicle" className="block text-sm font-medium text-[--text-color-lighter]" >
+            Wybierz pojazd
           </label>
           <select
             id="vehicle"
             value=""
             onChange={handleVehicleChange}
-            className="mt-1 block w-full rounded-lg bg-[var(--cardblack)] text-white border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
+            className="mt-1 block w-full rounded-lg bg-[var(--cardblack)] text-[--text-color] border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
           >
             <option value="" disabled>
-              -- Select a vehicle --
+              -- Wybierz pojazd --
             </option>
             {vehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id} className="bg-[var(--cardblack)] text-white">
+              <option key={vehicle.id} value={vehicle.id} className="bg-[var(--cardblack)] text-[--text-color]">
                 {vehicle.brand} {vehicle.license_plate}
               </option>
             ))}
@@ -855,15 +844,15 @@ useEffect(() => {
       {/* Toggle display of vehicles list when container is clicked */}
       {showVehicleSelect && selectedVehicle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm mt-">
-          <div className="relative p-8 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)] max-w-lg w-full max-h-[90vh] mt-20 "> {/* Increased from 80vh to 90vh */}
+          <div className="relative p-8 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)] max-w-lg w-full max-h-[90vh] mt-20 "> {/* Increased from 80vh to 90vh */}
             {/* X button to close the modal */}
             <button
               onClick={() => setShowVehicleSelect(false)}
-              className="absolute top-2 right-2 text-white text-xl"
+              className="absolute top-2 right-2 text-[--text-color] text-xl"
             >
               &times;
             </button>
-            <p className="block text-xl font-medium text-[gray-300] mb-6">Select Vehicle</p>
+            <p className="block text-xl font-medium text-[--text-color] mb-6" >Wybierz pojazd</p>
             {/* Increased max height of scrollable area */}
             <div className="overflow-y-auto max-h-[calc(90vh-8rem)]"> {/* Increased from 80vh to 90vh */}
               {vehicles.map((vehicle) => (
@@ -879,7 +868,7 @@ useEffect(() => {
                     <Image src={'car.svg'} alt="Car" width={48} height={48} />
                     <div>
                       <p className="text-lg font-semibold">{vehicle.brand}</p>
-                      <p className="text-sm text-gray-300">{vehicle.license_plate}</p>
+                      <p className="text-sm text-[--text-color-lighter]">{vehicle.license_plate}</p>
                     </div>
                   </div>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -900,7 +889,7 @@ useEffect(() => {
           {selectedVehicle && (
             <div 
               onClick={() => setShowMap(true)}
-              className="flex items-center justify-between p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)] cursor-pointer hover:bg-[var(--background)] transition-colors"
+              className="flex items-center justify-between p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)] cursor-pointer hover:bg-[var(--background)] transition-colors"
             >
               <div className="flex items-center space-x-4">
                 <Image src={"/basic-marker.png"} alt="marker" width={48} height={48} />
@@ -915,7 +904,7 @@ useEffect(() => {
               </div>
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
-                className="h-6 w-6 text-gray-300" 
+                className="h-6 w-6 text-[--text-color-lighter]" 
                 fill="none" 
                 viewBox="0 0 24 24" 
                 stroke="currentColor"
@@ -932,14 +921,16 @@ useEffect(() => {
           {/* Display Map Component when showMap is true */}
           {showMap && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-              <div className="relative w-[95%] h-[85%] max-lg:w-full max-lg:h-full max-lg:rounded-none p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)] z-[1000000000]">
+              <div className="relative w-[95%] h-[85%] max-lg:w-full max-lg:h-full max-lg:rounded-none p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)] z-[1000000000]">
                 {/* X button to close the modal */}
-                <button
-                  onClick={() => setShowMap(false)}
-                  className="absolute top-4 right-4 text-black text-xl z-[1000000001]"
-                >
-                  &times;
-                </button>
+                <div className='bg-(var(--yellow))'>
+                  <button
+                    onClick={() => setShowMap(false)}
+                    className="absolute top-4 max-lg:top-10 max-lg:right-0 right-2 w-16  text-black text-4xl max-lg:text-3xl z-[10] "
+                  >
+                    &times;
+                  </button>
+                </div>
                 {/* Map Component */}
                 <div className="w-full h-full">
                   <Map 
@@ -958,27 +949,27 @@ useEffect(() => {
           {selectedVehicle && (
             <div
               onClick={() => setShowVehicleSelect(!showVehicleSelect)}
-              className="w-full p-4 cursor-pointer border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)] flex items-center justify-between hover:bg-[var(--background)] transition-colors"
+              className="w-full p-4 cursor-pointer border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)] flex items-center justify-between hover:bg-[var(--background)] transition-colors"
             >
               <div className="flex items-center space-x-4">
                 <Image src={'car.svg'} alt="Car" width={48} height={48} className="text-yellow-500" />
                 <div>
                   <p className="text-xl font-bold">{selectedVehicle.brand}</p>
-                  <p className="text-sm text-gray-300">{selectedVehicle.license_plate}</p>
+                  <p className="text-sm text-[--text-color-lighter]">{selectedVehicle.license_plate}</p>
                 </div>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-300" fill="none" viewBox="0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[--text-color-lighter]" fill="none" viewBox="0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
           )}
           {/* Charging Options Form Container */}
           {selectedVehicle && (
-            <div className="p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)]">
+            <div className="p-4 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)]">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <fieldset className="space-x-4">
-                  <legend className="m-2 text-md font-medium text-gray-300">Charging Options</legend>
-                  <label className="text-gray-300">
+                  <legend className="m-2 text-md font-medium text-[--text-color]">Opcje ładowania</legend>
+                  <label className="text-[--text-color]">
                     <input
                       type="radio"
                       name="chargeMode"
@@ -987,9 +978,9 @@ useEffect(() => {
                       onChange={(e) => setChargeMode(e.target.value as 'time' | 'cost' | 'percentage')}
                       className="mr-1"
                     />
-                    By Time
+                    Według czasu
                   </label>
-                  <label className="text-gray-300">
+                  <label className="text-[--text-color]">
                     <input
                       type="radio"
                       name="chargeMode"
@@ -998,9 +989,9 @@ useEffect(() => {
                       onChange={(e) => setChargeMode(e.target.value as 'time' | 'cost' | 'percentage')}
                       className="mr-1"
                     />
-                    By Cost
+                    Według kosztu
                   </label>
-                  <label className="text-gray-300">
+                  <label className="text-[--text-color]">
                     <input
                       type="radio"
                       name="chargeMode"
@@ -1009,15 +1000,15 @@ useEffect(() => {
                       onChange={(e) => setChargeMode(e.target.value as 'time' | 'cost' | 'percentage')}
                       className="mr-1"
                     />
-                    By Percentage
+                    Według procentu
                   </label>
                 </fieldset>
 
                 {/* Add this new section for percentage input */}
                 {chargeMode === 'percentage' && (
                   <div>
-                    <label htmlFor="targetPercentage" className="block text-sm font-medium text-gray-300">
-                      Target Battery Percentage
+                    <label htmlFor="targetPercentage" className="block text-sm font-medium text-[--text-color]">
+                      Docelowy procent naładowania baterii
                     </label>
                     <div className="flex items-center space-x-4 mt-1">
                       <input
@@ -1028,7 +1019,7 @@ useEffect(() => {
                           const value = Math.min(100, Math.max(0, Number(e.target.value)));
                           setTargetPercentage(value);
                         }}
-                        className="w-full rounded-lg bg-[var(--cardblack)] text-white border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
+                        className="w-full rounded-lg bg-[var(--cardblack)] text-[--text-color] border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
                         min={Math.ceil(currentBatteryLevel)}
                         max="100"
                         required
@@ -1045,8 +1036,8 @@ useEffect(() => {
                 )}
                 {chargeMode === 'time' ? (
                   <div>
-                    <label htmlFor="duration" className="block text-sm font-medium text-gray-300">
-                      Charging Duration (minutes)
+                    <label htmlFor="duration" className="block text-sm font-medium text-[--text-color]">
+                      Czas ładowania (minuty)
                     </label>
                     <div className="flex items-center space-x-4 mt-1">
                       <input
@@ -1054,7 +1045,7 @@ useEffect(() => {
                         id="duration"
                         value={duration}
                         onChange={handleDurationChange}
-                        className="w-full rounded-lg bg-[var(--cardblack)] text-white border border-[var(--yellow)] shadow-sm"
+                        className="w-full rounded-lg bg-[var(--cardblack)] text-[--text-color] border border-[var(--yellow)] shadow-sm"
                         min="1"
                         required
                         placeholder='1'
@@ -1063,14 +1054,14 @@ useEffect(() => {
                         type="button"
                         onClick={handleDurationIncrement}
                       >
-                        + 30 Minutes
+                        + 30 minut
                       </Button>
                     </div>
                   </div>
                 ) : chargeMode === 'cost' ? (
                   <div>
-                    <label htmlFor="cost" className="block text-sm font-medium text-gray-300">
-                      Charging Cost (PLN)
+                    <label htmlFor="cost" className="block text-sm font-medium text-[--text-color]">
+                      Koszt ładowania (PLN)
                     </label>
                     <div className="flex items-center space-x-4 mt-1">
                       <input
@@ -1078,7 +1069,7 @@ useEffect(() => {
                         id="cost"
                         value={cost}
                         onChange={handleCostChange}
-                        className="w-full rounded-lg bg-[var(--cardblack)] text-white border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
+                        className="w-full rounded-lg bg-[var(--cardblack)] text-[--text-color] border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
                         min="1"
                         required
                         placeholder='1'
@@ -1113,16 +1104,16 @@ useEffect(() => {
                       }`}
                     >
                       {!selectedVehicle 
-                          ? 'Select a Vehicle' 
+                          ? 'Wybierz pojazd' 
                           : !stationId 
-                          ? 'Select a Station'
+                          ? 'Wybierz stację'
                           : !selectedPort.id
-                          ? 'Select a Port'
+                          ? 'Wybierz port'
                           : (selectedVehicle.current_battery_capacity_kw / selectedVehicle.battery_capacity_kwh) * 100 >= 100
-                          ? 'Battery Full'
+                          ? 'Bateria pełna'
                           : isSubmitting 
-                          ? 'Starting...' 
-                          : 'Start Charging Session'
+                          ? 'Rozpoczynanie...' 
+                          : 'Rozpocznij sesję ładowania'
                       }
                     </Button>
                   ) : (
@@ -1132,7 +1123,7 @@ useEffect(() => {
                       disabled={isSubmitting}
                       className="w-full bg-red-500 hover:bg-red-600"
                     >
-                      {isSubmitting ? 'Stopping...' : 'Stop Charging'}
+                      {isSubmitting ? 'Zatrzymywanie...' : 'Zatrzymaj ładowanie'}
                     </Button>
                   )}
 
@@ -1145,7 +1136,7 @@ useEffect(() => {
         </div>
         {/* Right Column: Battery Info */}
         {selectedVehicle && (
-          <div className="flex flex-col items-center p-8 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-white border-[var(--yellow)]">
+          <div className="flex flex-col items-center p-8 border-2 rounded-lg shadow-lg bg-[var(--cardblack)] text-[--text-color] border-[var(--yellow)]">
             <span className="text-xl mb-6">
               {(currentCapacityKWh || 0).toFixed(2)} / {selectedVehicle?.battery_capacity_kwh || 0} kWh
             </span>
@@ -1163,15 +1154,15 @@ useEffect(() => {
                 })}
               />
             </div>
-            <div className="mt-6 text-gray-300 text-center space-y-4">
+            <div className="mt-6 text-[--text-color] text-center space-y-4">
               <p className="text-lg text-yellow-500">
-                Charging Speed: {Math.min(selectedPort?.power_kw || 0, selectedVehicle?.max_charging_powerkwh || 0)} kW/h
+                Prędkość ładowania: {Math.min(selectedPort?.power_kw || 0, selectedVehicle?.max_charging_powerkwh || 0)} kW/h
               </p>
               <p className="mt-2 text-yellow-500">
-                {isCharging ? 'Current' : 'Estimated'} Cost: {(isCharging ? currentCost : cost || 0).toFixed(2)} PLN
+                {isCharging ? 'Aktualny' : 'Szacowany'} koszt: {(isCharging ? currentCost : cost || 0).toFixed(2)} PLN
               </p>
               <p className="mt-2 text-yellow-500">
-                {isCharging ? 'Remaining' : 'Estimated'} Time: {
+                {isCharging ? 'Pozostały' : 'Szacowany'} czas: {
                   Math.floor(remainingTime / 60)
                 }:
                 {
@@ -1183,9 +1174,9 @@ useEffect(() => {
               {sessionResult && !isCharging && (
                 <Button
                   onClick={() => router.push(`/payment?sessionId=${sessionResult.id}&amount=${currentCost}`)}
-                  className="w-full mt-4 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-black"
+                  className="w-full mt-4 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] text-[--text-color]"
                 >
-                  Proceed to Payment
+                  Przejdź do płatności
                 </Button>
               )}
             </div>

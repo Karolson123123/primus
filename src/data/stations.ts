@@ -2,7 +2,9 @@
 
 import { auth } from "@/auth";
 
-
+/**
+ * Interfejs stacji ładowania
+ */
 interface ChargingStation {
     id: number;
     name: string;
@@ -11,12 +13,18 @@ interface ChargingStation {
     created_at: string;
 }
 
+/**
+ * Dane wymagane do utworzenia nowej stacji
+ */
 export interface CreateStationData {
     name: string;
     latitude: number;
     longitude: number;
 }
 
+/**
+ * Pobiera informacje o wszystkich stacjach ładowania
+ */
 export const getStationsInfo = async (): Promise<ChargingStation[] | null> => {
     try {
         const session = await auth();
@@ -30,36 +38,33 @@ export const getStationsInfo = async (): Promise<ChargingStation[] | null> => {
             headers['Authorization'] = `Bearer ${session.user.apiToken}`;
         }
 
-        try {
-            const response = await fetch(`${baseUrl}/stations`, {
-                method: 'GET',
-                headers
-            });
+        const response = await fetch(`${baseUrl}/stations`, {
+            method: 'GET',
+            headers
+        });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch stations');
-            }
-            const data = await response.json();
-            return data;
-        } catch (networkError) {
-            console.error("Network error:", networkError);
-            throw new Error('Unable to connect to the server. Please check if the server is running.');
+        if (!response.ok) {
+            throw new Error('Błąd pobierania stacji');
         }
+        return await response.json();
     } catch (error) {
-        console.error("Error fetching stations:", error);
         return null;
     }
 }
 
+/**
+ * Tworzy nową stację ładowania
+ */
 export const createStation = async (stationData: CreateStationData): Promise<ChargingStation> => {
     try {
         const session = await auth();
         
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error("Brak tokenu uwierzytelniającego");
         }
 
-        const response = await fetch('http://localhost:8000/stations', {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const response = await fetch(`${baseUrl}/stations`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -68,30 +73,29 @@ export const createStation = async (stationData: CreateStationData): Promise<Cha
             body: JSON.stringify(stationData)
         });
 
-        // First check response.ok before trying to parse JSON
         if (!response.ok) {
-            const errorText = await response.text(); // Get raw response text
-            console.error('Server error response:', errorText);
-            throw new Error('Failed to create station');
+            throw new Error('Błąd tworzenia stacji');
         }
 
-        const data = await response.json();
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error("Error in createStation:", error);
-        throw error instanceof Error ? error : new Error('An unexpected error occurred');
+        throw error instanceof Error ? error : new Error('Wystąpił nieoczekiwany błąd');
     }
 };
 
+/**
+ * Usuwa stację ładowania
+ */
 export const deleteStation = async (stationId: number): Promise<void> => {
     try {
         const session = await auth();
         
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error("Brak tokenu uwierzytelniającego");
         }
 
-        const response = await fetch(`http://localhost:8000/stations/${stationId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const response = await fetch(`${baseUrl}/stations/${stationId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${session.user.apiToken}`
@@ -99,23 +103,26 @@ export const deleteStation = async (stationId: number): Promise<void> => {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete station');
+            throw new Error('Błąd usuwania stacji');
         }
     } catch (error) {
-        console.error("Error in deleteStation:", error);
-        throw error;
+        throw error instanceof Error ? error : new Error('Wystąpił nieoczekiwany błąd');
     }
 };
 
+/**
+ * Aktualizuje dane stacji ładowania
+ */
 export const updateStation = async (stationId: number, data: Partial<CreateStationData>): Promise<ChargingStation> => {
     try {
         const session = await auth();
         
         if (!session?.user?.apiToken) {
-            throw new Error("No authentication token available");
+            throw new Error("Brak tokenu uwierzytelniającego");
         }
 
-        const response = await fetch(`http://localhost:8000/stations/${stationId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const response = await fetch(`${baseUrl}/stations/${stationId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -125,13 +132,11 @@ export const updateStation = async (stationId: number, data: Partial<CreateStati
         });
 
         if (!response.ok) {
-            throw new Error('Failed to update station');
+            throw new Error('Błąd aktualizacji stacji');
         }
 
         return await response.json();
     } catch (error) {
-        console.error("Error in updateStation:", error);
-        throw error;
+        throw error instanceof Error ? error : new Error('Wystąpił nieoczekiwany błąd');
     }
 };
-

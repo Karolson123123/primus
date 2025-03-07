@@ -19,13 +19,17 @@ import { FormSuccess } from "@/components/FormSuccess";
 import { useState, useTransition } from "react";
 import { reset } from "@/actions/reset";
 
-
+/**
+ * Komponent formularza resetowania hasła
+ * Obsługuje proces wysyłania linku resetującego hasło na podany adres email
+ */
 export default function ResetForm() {
+    // Stan komponentu
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
-    
     const [isPending, startTransition] = useTransition();
 
+    // Inicjalizacja formularza z walidacją
     const form = useForm<z.infer<typeof ResetSchema>>({
         resolver: zodResolver(ResetSchema),
         defaultValues: {
@@ -33,6 +37,10 @@ export default function ResetForm() {
         }
     });
 
+    /**
+     * Obsługa wysłania formularza
+     * Przeprowadza proces resetowania hasła i obsługuje odpowiedź serwera
+     */
     const onSubmit = (values: z.infer<typeof ResetSchema>) => {
         setError("");
         setSuccess("");
@@ -43,7 +51,8 @@ export default function ResetForm() {
                     setError(data?.error);
                     setSuccess(data?.success);
                 })
-    });
+                .catch(() => setError("Wystąpił błąd podczas wysyłania linku resetującego"));
+        });
     };
 
     return (
@@ -55,28 +64,31 @@ export default function ResetForm() {
                         name="email"
                         render={({field}) => (
                             <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            {...field}
-                                            disabled={isPending}
-                                            placeholder="primus@ngineers.pl" 
-                                            type = "email"
-                                            />
-                                    </FormControl>
-                                    <FormMessage></FormMessage>
+                                <FormLabel>Adres email</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        disabled={isPending}
+                                        placeholder="jan.kowalski@example.com" 
+                                        type="email"
+                                    />
+                                </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
-                    
                 </div>
                 
-                <FormError message={error}></FormError>
-                <FormSuccess message={success}></FormSuccess>
+                <FormError message={error} />
+                <FormSuccess message={success} />
                 
-                <Button disabled={isPending}>Następny krok </Button>
-                
+                <Button 
+                    disabled={isPending}
+                    className="bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                >
+                    Wyślij link resetujący
+                </Button>
             </form>
         </Form>
-    )
+    );
 };

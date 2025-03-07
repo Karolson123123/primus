@@ -7,6 +7,7 @@ import { StationForm } from '@/components/StationForm'
 import { StationsInfo } from '@/components/StationInfo'
 import { AdminContent } from '@/components/auth/AdminContent'
 
+// Interfejsy opisujące strukturę danych
 interface Station {
   id: number;
   name: string;
@@ -24,14 +25,14 @@ interface Port {
   status: 'AVAILABLE' | 'IN_USE' | 'OFFLINE';
 }
 
-
-
+// Główny komponent zarządzania stacjami ładowania
 export default function StationsPage() {
   const [stations, setStations] = useState<Station[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
 
+  // Funkcja pobierająca dane stacji z API
   const fetchStations = async () => {
     try {
       const stationData = await getStationsInfo();
@@ -39,19 +40,19 @@ export default function StationsPage() {
         setStations(stationData);
       }
     } catch (error) {
-      console.error('Error fetching stations:', error);
-      setError('Failed to load stations. Please try again later.');
+      setError('Nie udało się załadować stacji. Spróbuj ponownie później.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Pobieranie danych przy pierwszym renderowaniu
   useEffect(() => {
     fetchStations();
   }, []);
 
   if (loading) {
-    return <div className="text-white text-center">Loading stations...</div>
+    return <div className="text-[--text-color] text-center">Ładowanie stacji...</div>
   }
 
   if (error) {
@@ -65,14 +66,15 @@ export default function StationsPage() {
           border-color: var(--yellow) !important;
         }
       `}</style>
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 max-lg:w-full max-lg:mt-20">
         <div className='navbar flex justify-between items-center w-[97%]'>
-          <h1 className="text-2xl font-bold mb-6 text-white">Stations Management</h1>
+          <h1 className="text-2xl font-bold mb-6 text-[--text-color]">Zarządzanie stacjami</h1>
           <AdminContent>
             <Button
               onClick={() => setShowForm(prev => !prev)}
-              className={`rounded-full bg-[var(--yellow)] h-12 w-12 flex items-center justify-center transform transition-transform duration-300 z-[10000] ${showForm ? 'rotate-45' : ''}`}
-              aria-label="Toggle Station Form"
+              className={`rounded-full bg-[var(--yellow)] h-12 w-12 flex items-center justify-center 
+                         transform transition-transform duration-300 z-[100] ${showForm ? 'rotate-45' : ''}`}
+              aria-label="Przełącz formularz stacji"
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -87,14 +89,13 @@ export default function StationsPage() {
           </AdminContent>
         </div>
         <StationsInfo 
-          label='Stations:' 
+          label='Stacje ładowania:' 
           stations={stations} 
           isLoading={loading}
           adminControls={
             <AdminContent>
-              {/* Wrap this around the controls in StationsInfo */}
               <div className="admin-controls">
-                {/* Your edit/delete/add port buttons will be here */}
+                {/* Panel kontrolny administratora */}
               </div>
             </AdminContent>
           }
