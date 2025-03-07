@@ -4,7 +4,7 @@ import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { LoginSchema } from "@/schema";
 import { getUserByEmail } from "@/data/user";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt-edge";
 
 /**
  * Konfiguracja uwierzytelniania NextAuth

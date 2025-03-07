@@ -44,7 +44,7 @@ export const getPortsInfo = async (): Promise<Port[] | null> => {
         }
 
         return await response.json();
-    } catch (error) {
+    } catch {
         return null;
     }
 }
@@ -109,7 +109,7 @@ export const updatePortStatus = async (portId: number, status: 'wolny' | 'zajety
         }
 
         return response.json();
-    } catch (error) {
+    } catch {
         return null;
     }
 };

@@ -33,7 +33,7 @@ export default function VehiclesPage() {
         if (vehicleData) {
           setVehicles(vehicleData);
         }
-      } catch (error) {
+      } catch {
         setError('Nie udało się załadować pojazdów. Spróbuj ponownie później.');
       } finally {
         setLoading(false);

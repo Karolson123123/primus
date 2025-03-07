@@ -63,7 +63,7 @@ const StationCard = ({ station }: { station: Station }) => {
         const portsData = await getPortsInfo();
         const stationPorts = portsData.filter(port => port.station_id === station.id);
         setPorts(stationPorts);
-      } catch (error) {
+      } catch  {
         // Obsługa błędu
       }
     };
@@ -78,7 +78,7 @@ const StationCard = ({ station }: { station: Station }) => {
       const portsData = await getPortsInfo();
       const stationPorts = portsData.filter(port => port.station_id === station.id);
       setPorts(stationPorts);
-    } catch (error) {
+    } catch  {
       // Obsługa błędu
     }
   };

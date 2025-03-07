@@ -46,7 +46,7 @@ export const PaymentsInfo = ({
      * Filtrowanie i sortowanie płatności
      */
     const filterAndSortPayments = useCallback((paymentsToProcess: Payment[]) => {
-        let filtered = paymentsToProcess.filter(payment => {
+        const filtered = paymentsToProcess.filter(payment => {
             const matchesSearch = searchQuery === '' || 
                 payment.session_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 payment.payment_method.toLowerCase().includes(searchQuery.toLowerCase());
@@ -211,7 +211,7 @@ const PaymentsPage = () => {
             try {
                 const data = await getPaymentsInfo();
                 if (data) setPayments(data);
-            } catch (error) {
+            } catch  {
                 // Obsługa błędu
             } finally {
                 setIsLoading(false);

@@ -120,7 +120,7 @@ const PaymentCard = ({ payment }: { payment: Payment }) => {
 export default function PaymentsPage() {
     const [payments, setPayments] = useState<Payment[]>([])
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+    // const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [filterBy, setFilterBy] = useState<FilterOption>('all')
     const [sortBy, setSortBy] = useState<SortOption>('newest')
@@ -134,7 +134,7 @@ export default function PaymentsPage() {
                 if (paymentData) {
                     setPayments(paymentData)
                 }
-            } catch (error) {
+            } catch  {
                 setError('Nie udało się załadować płatności. Spróbuj ponownie później.')
             } finally {
                 setLoading(false)
@@ -288,4 +288,8 @@ export default function PaymentsPage() {
             </CardContent>
         </Card>
     )
+}
+
+function setError(arg0: string) {
+    throw new Error(arg0)
 }

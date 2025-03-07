@@ -239,7 +239,7 @@ export const ChargingSessionInfo = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
+
 
   /**
    * Funkcja ładująca więcej sesji
@@ -328,7 +328,7 @@ export const ChargingSessionInfo = ({
 
 useEffect(() => {
     const fetchVehicles = async () => {
-      setIsLoadingVehicles(true);
+      // setIsLoadingVehicles(true);
       try {
         const vehiclesData = await getVehicles();
         if (vehiclesData) {
@@ -337,7 +337,7 @@ useEffect(() => {
       } catch (error) {
         console.error("Error fetching vehicles:", error);
       } finally {
-        setIsLoadingVehicles(false);
+        // setIsLoadingVehicles(false);
       }
     };
     fetchVehicles();

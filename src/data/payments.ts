@@ -62,7 +62,7 @@ export const getPaymentsInfo = async (): Promise<Payment[] | null> => {
 
         return await response.json();
 
-    } catch (error) {
+    } catch {
         return null;
     }
 };

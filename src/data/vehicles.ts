@@ -103,7 +103,7 @@ export const createVehicle = async (vehicleData: CreateVehicleData): Promise<Veh
         let responseData;
         try {
             responseData = await response.json();
-        } catch (e) {
+        } catch {
             const textResponse = await response.text();
             if (textResponse.includes("vehicles_license_plate_unique")) {
                 throw new Error("Pojazd o tym numerze rejestracyjnym już istnieje");

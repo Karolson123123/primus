@@ -35,9 +35,9 @@ export default async function RootLayout({
                   backgroundColor: "var(--cardblack)",
                   color: "white",
                 },
-                descriptionStyle: {
-                  color: "var(--cardblack)",
-                },
+                // descriptionStyle: {
+                //   color: "var(--cardblack)",
+                // },
               }}
             />
             {children}

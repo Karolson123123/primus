@@ -5,7 +5,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import * as L from 'leaflet';
 import { LatLngTuple } from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getStationsInfo } from '@/data/stations';
 import useGeoLocation from '@/lib/geo-location';  
 import { getPortsInfo } from '@/data/ports';
@@ -228,7 +228,7 @@ const WORLD_BOUNDS: L.LatLngBoundsLiteral = [
 
 export default function Map({  
   width = "100%", 
-  selectedStationId,
+//   selectedStationId,
   containerHeight = "90vh",
   searchboxWidth = "",
   stationInfoStyles = {
@@ -247,7 +247,7 @@ export default function Map({
     const [ports, setPorts] = useState<Port[]>([]);
     const [activeMarker, setActiveMarker] = useState<number | null>(null);
     const [selectedPort, setSelectedPort] = useState<Port | null>(null);
-    const chargingButtonRef = useRef<HTMLButtonElement>(null);
+    // const chargingButtonRef = useRef<HTMLButtonElement>(null);
     const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
     // existing code for fetching ports and stations

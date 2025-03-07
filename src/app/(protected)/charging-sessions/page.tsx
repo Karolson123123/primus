@@ -33,7 +33,7 @@ export default function ChargingSessionPage() {
         if (sessionsData) {
           setSessions(sessionsData);
         }
-      } catch (error) {
+      } catch  {
         setError('Nie udało się załadować sesji. Spróbuj ponownie później.');
       } finally {
         setLoading(false);

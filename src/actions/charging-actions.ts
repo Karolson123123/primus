@@ -3,6 +3,7 @@
 import { auth } from '@/auth';
 import { startChargingSession, stopChargingSession } from '@/data/charging-session';
 import { updateVehicleCapacity } from '@/data/vehicles';
+import { ChargingSession } from '@/data/charging-session';
 
 /**
  * Interfejs danych sesji ładowania
@@ -61,13 +62,13 @@ export async function startNewChargingSession(sessionData: ChargingSessionData) 
         await updatePortStatus(sessionData.port_id, 'zajety');
         const response = await startChargingSession({
             ...sessionData,
-            user_id: session.user.id
+            // user_id: session.user.id
         });
         return response;
     } catch (error) {
         try {
             await updatePortStatus(sessionData.port_id, 'wolny');
-        } catch (resetError) {
+        } catch  {
             throw new Error('Nie udało się zresetować statusu portu');
         }
         throw error instanceof Error ? error : new Error('Nie udało się rozpocząć sesji ładowania');
@@ -93,12 +94,13 @@ export async function stopCurrentChargingSession(
         const sessionData: ChargingSession = {
             id: sessionId,
             vehicle_id: vehicleId,
-            port_id: null,
-            start_time: null,
+            port_id: 0,
+            start_time: "",
             end_time: new Date().toISOString(),
             energy_used_kwh: energyUsed,
             total_cost: finalCost,
-            status: 'COMPLETED'
+            status: 'COMPLETED',
+            payment_status: "PENDING"
         };
 
         const session = await stopChargingSession(sessionData);
@@ -152,7 +154,7 @@ export async function updateSessionState(sessionId: number, updatedData: {
         }
 
         return await response.json();
-    } catch (error) {
+    } catch {
         throw new Error('Błąd podczas aktualizacji stanu sesji');
     }
 }

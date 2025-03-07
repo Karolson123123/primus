@@ -239,7 +239,7 @@ const VehiclesPage = () => {
                 } else {
                     setError('Nieprawidłowy format danych');
                 }
-            } catch (error) {
+            } catch {
                 setError('Nie udało się załadować pojazdów. Spróbuj ponownie później.');
             } finally {
                 setIsLoading(false);
@@ -247,7 +247,7 @@ const VehiclesPage = () => {
         };
 
         fetchVehicles();
-    }, []);
+    }, [setError, setIsLoading, setVehicles]);
 
     if (isLoading) {
         return (

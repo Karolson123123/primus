@@ -47,7 +47,7 @@ export default function DiscountPage() {
   const scContainer = useRef<HTMLDivElement>(null);
   const [discountCode, setDiscountCode] = useState<DiscountCodeData>({ code: '', percentage: 0 });
   const [timeLeft, setTimeLeft] = useState<string>('');
-  const timerRef = useRef<NodeJS.Timeout>(); // Add this ref for cleanup
+  const timerRef = useRef<NodeJS.Timeout | null>(null); // Add this ref for cleanup
 
   useEffect(() => {
     const createNewDiscount = async () => {
@@ -141,13 +141,13 @@ export default function DiscountPage() {
 
             localStorage.setItem("scratched", "true");
             toast.success(`Odkryłeś kod promocyjny ${discountCode.code} na ${discountCode.percentage}% zniżki!`);
-          } catch (error) {
+          } catch {
             
           }
         }
       });
 
-      sc.init().catch((error) => {
+      sc.init().catch(() => {
         toast.error("Wystąpił błąd podczas ładowania zdrapki");
       });
 
@@ -155,7 +155,7 @@ export default function DiscountPage() {
         sc.clear();
       };
     }
-  }, []);
+  }, [discountCode.code, discountCode.percentage]);
   return(
     <>
       <div className='text-4xl max-lg:text-2xl max-lg:mt-20 max-lg:mb-[-60] text-[var(--text-color)]'>

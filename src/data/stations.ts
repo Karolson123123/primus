@@ -47,7 +47,7 @@ export const getStationsInfo = async (): Promise<ChargingStation[] | null> => {
             throw new Error('Błąd pobierania stacji');
         }
         return await response.json();
-    } catch (error) {
+    } catch {
         return null;
     }
 }

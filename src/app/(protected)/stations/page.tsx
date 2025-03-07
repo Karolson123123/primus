@@ -39,7 +39,7 @@ export default function StationsPage() {
       if (stationData) {
         setStations(stationData);
       }
-    } catch (error) {
+    } catch {
       setError('Nie udało się załadować stacji. Spróbuj ponownie później.');
     } finally {
       setLoading(false);

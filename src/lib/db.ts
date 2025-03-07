@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
  * Zapobiega tworzeniu wielu połączeń podczas hot-reloadu w trybie deweloperskim
  */
 declare global {
-    var prisma: PrismaClient | undefined;
+    let prisma: PrismaClient | undefined;
 }
 
 /**

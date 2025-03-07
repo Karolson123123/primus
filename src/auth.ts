@@ -105,7 +105,7 @@ export const {
         },
         
         // Rozszerzanie tokenu JWT o dodatkowe dane
-        async jwt({ token, user, account, trigger }) {
+        async jwt({ token, user, account }) {
             if (user) {
                 const existingUser = await getUserById(user.id);
                 if (!existingUser) return token;

@@ -29,6 +29,7 @@
     "@types/react-leaflet-markercluster": "^3.0.4",
     "add": "^2.0.6",
     "axios": "^1.7.9",
+    "bcrypt-edge": "^0.1.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

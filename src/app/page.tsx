@@ -9,7 +9,8 @@ import { GuestContent } from "@/components/auth/GuestContent";
 
 // Inicjalizacja czcionki Bebas Neue dla nagłówków
 const bebasNeue = Bebas_Neue({
-  weight: "400"
+  weight: "400",
+  subsets: ['latin']
 });
 
 export default function Home() {

@@ -194,9 +194,6 @@ export default function ChargingPage() {
     setDuration(newDuration);
   };
 
-  const handleDurationIncrement = () => {
-    setDuration(prev => prev + 30);
-  };
 
   // Add these handlers to your component
   const handleTimeIncrement = (minutes: number) => {
@@ -306,7 +303,7 @@ useEffect(() => {
       if (timer) clearInterval(timer);
     };
   }
-}, [isCharging, cachedHandleStopCharging]);
+}, [isCharging, cachedHandleStopCharging, remainingTime]);
 
   // Add new effect to handle auto-stop conditions
   useEffect(() => {

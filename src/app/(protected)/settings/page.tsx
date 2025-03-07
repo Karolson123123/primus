@@ -28,21 +28,10 @@ import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { FormSuccess } from "@/components/FormSuccess";
 import { FormError } from "@/components/FormError";
-import { 
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-
- } from "@/components/ui/select";
-import { UserRole } from "@prisma/client";
 import { Switch } from "@/components/ui/switch";
 
 const SettingsPage =  () => {
     const user = useCurrentUser();
-
-
     const [error, setError] = useState<string | undefined>();
     const [success, setSuccess] = useState<string | undefined>();
     const { update } = useSession();

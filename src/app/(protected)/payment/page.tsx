@@ -31,7 +31,7 @@ export default function PaymentPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
-  const [chargingSession, setChargingSession] = useState(null);
+  // const [chargingSession, setChargingSession] = useState(null);
   const [vehicle, setVehicle] = useState(null)
   const [sessionDetails, setSessionDetails] = useState<SessionDetails>({
     startTime: '',
@@ -42,10 +42,10 @@ export default function PaymentPage() {
     portNumber: 0,
     theoreticalDuration: ''
   })
-  const [ports, setPorts] = useState([])
-  const [discountCode, setDiscountCode] = useState('');
+  // const [ports, setPorts] = useState([])s
+
   const [discountPercentage, setDiscountPercentage] = useState(0);
-  const [isVerifying, setIsVerifying] = useState(false);
+
   const [successMessage, setSuccessMessage] = useState('');
   const [scratchCode, setScratchCode] = useState('');
   const [isScratchVerifying, setIsScratchVerifying] = useState(false);
@@ -71,7 +71,7 @@ export default function PaymentPage() {
         const sessionData = sessions?.find(s => s.id === Number(sessionId));
         
         if (sessionData) {
-          setChargingSession(sessionData);
+          // setChargingSession(sessionData);
           
           const sessionPort = ports?.find(p => p.id === sessionData.port_id);
           
@@ -115,7 +115,7 @@ export default function PaymentPage() {
             }
           }
 
-          setPorts(ports || []);
+          // setPorts(ports || []);
         }
       } catch {
         toast.error('Nie udało się załadować szczegółów sesji');
