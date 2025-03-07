@@ -8,7 +8,7 @@ import { getUserByEmail, getUserById } from "@/data/user";
 import { currentUser } from "@/lib/auth";
 import { generateVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail } from "@/lib/mail";
-import bcrypt from "bcrypt-edge";
+import bcrypt from "bcryptjs";
 
 // Funkcja do aktualizacji ustawień użytkownika
 export const settings = async (
