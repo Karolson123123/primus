@@ -11,7 +11,7 @@ import { sendVerificationEmail, sendTwoFactorTokenEmail } from "@/lib/mail";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
 import { db } from "@/lib/db";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
-import bcrypt from "bcrypt-edge";
+import bcrypt from "bcryptjs";
 
 /**
  * Akcja logowania użytkownika
