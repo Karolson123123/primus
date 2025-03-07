@@ -101,6 +101,16 @@ const config = {
             opacity: "0"
           },
         },
+        "hide-to-top": {
+          from: { 
+            transform: "translateY(0)",
+            opacity: "1"
+          },
+          to: { 
+            transform: "translateY(-10%)",
+            opacity: "0"
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -109,6 +119,7 @@ const config = {
         "display-from-top": "display-from-top 0.2s ease-out",
         "fade-in-right": "fade-in-right 0.3s ease-out",
         "fade-out-right": "fade-out-right 0.3s ease-in forwards",
+        "hide-to-top": "hide-to-top 0.2s ease-in forwards",
       },
     },
   },

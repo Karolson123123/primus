@@ -198,6 +198,19 @@ export default function ChargingPage() {
     setDuration(prev => prev + 30);
   };
 
+  // Add these handlers to your component
+  const handleTimeIncrement = (minutes: number) => {
+    setDuration(prev => (prev || 0) + minutes);
+  };
+
+  // Add this handler function with your other handlers
+  const handlePercentageIncrement = (increment: number) => {
+    setTargetPercentage(prev => {
+      const newValue = (prev || currentBatteryLevel) + increment;
+      return Math.min(100, Math.max(currentBatteryLevel, newValue));
+    });
+  };
+
   // Move all your existing useEffect hooks here
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -293,7 +306,7 @@ useEffect(() => {
       if (timer) clearInterval(timer);
     };
   }
-}, [isCharging, cachedHandleStopCharging]); // Remove remainingTime from dependencies
+}, [isCharging, cachedHandleStopCharging]);
 
   // Add new effect to handle auto-stop conditions
   useEffect(() => {
@@ -484,7 +497,6 @@ useEffect(() => {
       setError(error instanceof Error ? error.message : 'An error occurred');
     }
   };
-
 
   
 
@@ -810,7 +822,7 @@ useEffect(() => {
 
   return (
     <div className="container mx-auto py-6 px-4 max-lg:w-full max-lg:mt-20">
-      <h1 className="text-3xl font-bold text-[--text-color] mb-6 text-[--text-color]">Rozpocznij sesję ładowania</h1>
+      <h1 className="text-3xl font-bold text-[--text-color] mb-6">Rozpocznij sesję ładowania</h1>
       {error && (
         <div className="p-4 mb-6 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
             {error}
@@ -852,7 +864,7 @@ useEffect(() => {
             >
               &times;
             </button>
-            <p className="block text-xl font-medium text-[--text-color] mb-6" >Wybierz pojazd</p>
+            <p className="block text-xl font-medium text-[--text-color] mb-6">Wybierz pojazd</p>
             {/* Increased max height of scrollable area */}
             <div className="overflow-y-auto max-h-[calc(90vh-8rem)]"> {/* Increased from 80vh to 90vh */}
               {vehicles.map((vehicle) => (
@@ -1014,23 +1026,35 @@ useEffect(() => {
                       <input
                         type="number"
                         id="targetPercentage"
-                        value={targetPercentage}
+                        value={targetPercentage || ''}
                         onChange={(e) => {
-                          const value = Math.min(100, Math.max(0, Number(e.target.value)));
+                          const value = Math.min(100, Math.max(currentBatteryLevel, Number(e.target.value)));
                           setTargetPercentage(value);
                         }}
-                        className="w-full rounded-lg bg-[var(--cardblack)] text-[--text-color] border border-[var(--yellow)] shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-300"
+                        className="w-full rounded-lg bg-[var(--cardblack)] text-[--text-color] border border-[var(--yellow)] shadow-sm"
                         min={Math.ceil(currentBatteryLevel)}
                         max="100"
                         required
-                        placeholder='0-100'
+                        placeholder={`${Math.ceil(currentBatteryLevel)}-100`}
                       />
-                      <Button
-                        type="button"
-                        onClick={() => setTargetPercentage(prev => Math.min(100, prev + 10))}
-                      >
-                        + 10%
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          onClick={() => handlePercentageIncrement(10)}
+                          className="px-3 py-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                          disabled={targetPercentage >= 100}
+                        >
+                          +10%
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handlePercentageIncrement(25)}
+                          className="px-3 py-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                          disabled={targetPercentage >= 100}
+                        >
+                          +25%
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1050,12 +1074,29 @@ useEffect(() => {
                         required
                         placeholder='1'
                       />
-                      <Button
-                        type="button"
-                        onClick={handleDurationIncrement}
-                      >
-                        + 30 minut
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          onClick={() => handleTimeIncrement(15)}
+                          className="px-3 py-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                        >
+                          +15
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleTimeIncrement(30)}
+                          className="px-3 py-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                        >
+                          +30
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleTimeIncrement(60)}
+                          className="px-3 py-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)]"
+                        >
+                          +60
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : chargeMode === 'cost' ? (

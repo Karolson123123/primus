@@ -177,7 +177,8 @@ body {
   z-index: -1;
   border: 6px solid var(--darkeryellow);
   background-color: var(--yellow);
-  border-radius: 1rem;
+  border-radius: 1rem; 
+  color: var(--black);
 }
 
 .scContainer > div + div {

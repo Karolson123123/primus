@@ -59,7 +59,7 @@ export default function VehiclesPage() {
       `}</style>
       <div className="container mx-auto py-6 max-lg:w-full max-lg:mt-20">
         <div className='navbar flex justify-between items-center w-[97%]'>
-          <h1 className="text-2xl font-bold mb-6">Zarządzanie pojazdami</h1>
+          <h1 className="text-2xl font-bold mb-6 text-[--text-color]">Zarządzanie pojazdami</h1>
           <Button
             onClick={() => setShowForm(prev => !prev)}
             className={`rounded-full bg-[var(--yellow)] h-12 w-12 flex items-center justify-center 

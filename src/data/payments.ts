@@ -81,7 +81,6 @@ export const createPayment = async (paymentData: PaymentCreate): Promise<Payment
             return null;
         }
 
-        // Get user_id from session and validate it exists
         const userId = session.user?.id;
         if (!userId) {
             console.error('No user id available');
@@ -97,7 +96,7 @@ export const createPayment = async (paymentData: PaymentCreate): Promise<Payment
 
         console.log('Creating payment with data:', fullPaymentData);
 
-        const response = await fetch(`${baseUrl}/payments?discount_code_id=${paymentData.discount_code_id}`, {
+        const response = await fetch(`${baseUrl}/payments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -106,24 +105,25 @@ export const createPayment = async (paymentData: PaymentCreate): Promise<Payment
             body: JSON.stringify(fullPaymentData)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Payment creation failed:', {
-                status: response.status,
-                data: errorData
-            });
-            throw new Error(errorData.detail || 'Błąd tworzenia płatności');
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            console.error('Failed to parse response:', parseError);
+            throw new Error('Invalid server response');
         }
 
-        const result = await response.json();
-        console.log("Dane otrzymane od paymentu");
-        console.log(result);
-        return result;
+        if (!response.ok) {
+            console.error('Payment creation failed:', {
+                status: response.status,
+                data
+            });
+            throw new Error(data?.detail || 'Error creating payment');
+        }
+
+        return data;
     } catch (error) {
         console.error('Payment creation error:', error);
-        if (error instanceof Error) {
-            throw error;
-        }
-        throw new Error('Wystąpił nieoczekiwany błąd podczas tworzenia płatności');
+        throw error instanceof Error ? error : new Error('Unexpected error during payment creation');
     }
 };

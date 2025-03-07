@@ -50,6 +50,7 @@ export default function PaymentPage() {
   const [scratchCode, setScratchCode] = useState('');
   const [isScratchVerifying, setIsScratchVerifying] = useState(false);
   const [discount, setDiscount] = useState<Discount | null>(null)
+  const [sessionCost, setSessionCost] = useState<number>(0);
   
   const sessionId = searchParams.get('sessionId')
   const amount = searchParams.get('amount')
@@ -74,6 +75,10 @@ export default function PaymentPage() {
           
           const sessionPort = ports?.find(p => p.id === sessionData.port_id);
           
+          // Get the cost from session data
+          const sessionCost = Number(sessionData.total_cost || 0);
+          setSessionCost(sessionCost);
+
           // Obliczanie czasu trwania sesji
           const start = new Date(sessionData.start_time);
           const end = sessionData.end_time ? new Date(sessionData.end_time) : new Date();
@@ -125,7 +130,7 @@ export default function PaymentPage() {
   const handlePayment = async (method: 'card' | 'blik' | 'transfer') => {
     setIsLoading(true);
     try {
-      if (!sessionId || !amount || !authSession?.user?.id) {
+      if (!sessionId || !sessionCost || !authSession?.user?.id) {
         throw new Error('Brak wymaganych danych do płatności');
       }
 
@@ -150,7 +155,7 @@ export default function PaymentPage() {
         // discount_percentage: discountPercentage || undefined,
         // discount_code_id:
         discount_code_id: discount?.id,
-        original_amount: Number(amount),
+        original_amount: Number(sessionCost),
       };
 
       const payment = await createPayment(paymentData);
@@ -207,9 +212,9 @@ export default function PaymentPage() {
   };
 
   const calculateDiscountedAmount = () => {
-    if (!discountPercentage) return amount;
-    const discount = (Number(amount) * discountPercentage) / 100;
-    return (Number(amount) - discount).toFixed(2);
+    if (!discountPercentage) return sessionCost.toString();
+    const discountAmount = (sessionCost * discountPercentage) / 100;
+    return (sessionCost - discountAmount).toFixed(2);
   };
 
   const formatAmount = (amount: number | string) => {

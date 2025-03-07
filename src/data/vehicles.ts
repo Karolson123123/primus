@@ -25,7 +25,7 @@ interface CreateVehicleData {
     brand: string;
     battery_capacity_kwh: number;
     battery_condition: number;
-    max_charging_powerkWh: number;
+    max_charging_powerkwh: number;
     current_battery_capacity_kw: number;
 }
 
@@ -77,7 +77,7 @@ export const createVehicle = async (vehicleData: CreateVehicleData): Promise<Veh
             ...vehicleData,
             user_id: session.user.id,
             battery_capacity_kwh: Math.round(Math.max(0, Number(vehicleData.battery_capacity_kwh || 0))),
-            max_charging_powerkwh: Math.round(Math.max(0, Number(vehicleData.max_charging_powerkWh || 0))),
+            max_charging_powerkwh: Math.round(Math.max(0, Number(vehicleData.max_charging_powerkwh || 0))),
             battery_condition: Math.min(100, Math.max(0, vehicleData.battery_condition)),
             current_battery_capacity_kw: Number(
                 Math.min(

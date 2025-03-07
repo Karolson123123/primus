@@ -60,10 +60,10 @@ export default function SearchBox({ stations, width = '300px', onStationSelect }
 
     return (
         <div className="flex flex-col ml-16 relative" style={{ width }}>
-            <div className='flex mt-3 items-center z-[1000000] gap-1'> 
+            <div className='flex mt-3 items-center z-[1000000] gap-1 text-[--text-color-lighter]'> 
                 <div style={{ width: '100%' }}>
                     <OutlinedInput 
-                        className='z-[10000] bg-[var(--background)] w-full'
+                        className='z-[10000] bg-[var(--background)] w-full '
                         value={searchTerm}
                         onChange={handleSearchChange}
                         placeholder="Wyszukaj stacje..."

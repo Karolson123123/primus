@@ -180,7 +180,7 @@ export const VehiclesInfo = ({ vehicles = [], label, isLoading = false }: Vehicl
                                 placeholder="Szukaj pojazdów..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-8 sm:pl-10 py-1 sm:py-2 text-sm sm:text-base bg-gray-700 text-[--text-color] border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
+                                className="pl-8 sm:pl-10 py-1 sm:py-2 text-sm sm:text-base bg-[--black] text-[--text-color] border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]"
                             />
                             <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-color-lighter)] w-3 h-3 sm:w-4 sm:h-4" />
                         </div>
@@ -190,7 +190,7 @@ export const VehiclesInfo = ({ vehicles = [], label, isLoading = false }: Vehicl
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="bg-gray-700 text-[--text-color] text-sm sm:text-base px-2 sm:px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
+                                className="bg-[--black] text-[--text-color] text-sm sm:text-base px-2 sm:px-3 py-1 rounded-lg border border-[var(--yellow)] focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]"
                             >
                                 <option value="alphabetical">Alfabetycznie</option>
                                 <option value="battery">Poziom baterii</option>

@@ -372,8 +372,8 @@ export default function Map({
             {stations.map((station, index) => (
                 <div 
                     key={`popup-${index}`}
-                    className={`absolute top-[50%] max-lg:top-32 h-[96%] w-[400px] max-lg:w-full max-lg:h-[90px]
-                                transform -translate-y-1/2 right-4 max-lg:right-0 z-50
+                    className={`absolute top-[50%] max-lg:top-32 h-[96%] w-[400px] max-lg:w-full max-lg:h-[90px] 
+                                transform -translate-y-1/2 right-4 max-lg:right-0 z-50 
                                 ${activeMarker === index ? 'block max-lg:flex' : 'hidden'}
                                 `}
                     style={{ 
@@ -417,11 +417,11 @@ export default function Map({
                         <main className='w-[95%] h-[90%] flex gap-4 items-center flex-col p-6 text-4xl  z-[2] overflow-y-auto mt-3'>
                             <div className='bg-[var(--cardblack)] rounded-3xl w-full'>
                                 {/* Updated station name to include the city name if available */}
-                                <h1 className='font-semibold text-4xl p-7 max-lg:text-2xl'>
+                                <h1 className='font-semibold text-4xl p-7 max-lg:text-2xl text-[--text-color]'>
                                     {station.name}
                                 </h1>
                             </div>
-                            <section className='bg-[var(--cardblack)]  text-2xl flex flex-col items-center gap-4 h-fit w-full justify-center p-7 rounded-3xl max-lg:text-' onClick={(e) => {
+                            <section className='bg-[var(--cardblack)] text-[--text-color]  text-2xl flex flex-col items-center gap-4 h-fit w-full justify-center p-7 rounded-3xl max-lg:text-' onClick={(e) => {
                                 if (e.currentTarget.nextElementSibling !== null) {
                                     e.currentTarget.nextElementSibling.classList.toggle('hidden')
                                 }}}>
@@ -437,12 +437,12 @@ export default function Map({
                             <section className='flex flex-col gap-4 animate-display-from-top z-[1] bg-[var(--cardblack)] rounded-3xl p-7'>
     <h3 className="text-2xl mb-2 font-semibold text-[var(--text-color)]">Wybierz port ładowania:</h3>
     {ports.filter(port => port.station_id === station.id).map((port, index) => (
-        <div key={port.id} className="flex flex-col gap-2">
+        <div key={port.id} className="flex flex-col gap-2 text-[--text-color]">
             <div 
                 onClick={() => setSelectedPort(port.status === 'wolny' ? port : null)}
                 className={`flex items-center gap-4 text-xl p-4 rounded-lg cursor-pointer transition-all
-                    ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
-                    ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-gray-800' : ''}
+                    ${port.status !== 'wolny' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[--black]'}
+                    ${selectedPort?.id === port.id ? 'border-2 border-[var(--yellow)] bg-[--black]' : ''}
                 `}
             >
                 <div className={`w-3 h-3 rounded-full ${
@@ -455,7 +455,7 @@ export default function Map({
                         <span>Port {index + 1}</span>
                         <span className="text-sm font-semibold text-[var(--yellow)]">{port.power_kw}kW</span>
                     </div>
-                    <div className="text-sm text-gray-400">Status: {port.status}</div>
+                    <div className="text-sm text-gray-400 text-[--text-color-lighter]">Status: {port.status}</div>
                 </div>
             </div>
 
@@ -478,7 +478,7 @@ export default function Map({
                         setActiveMarker(null);
                     }}
                     className="w-full py-3 mt-2 bg-[var(--yellow)] hover:bg-[var(--darkeryellow)] 
-                             transition-colors rounded-lg text-xl font-semibold text-black"
+                             transition-colors rounded-lg text-xl font-semibold text-[--black] animate-display-from-top"
                 >
                     Rozpocznij ładowanie
                 </button>
@@ -487,45 +487,6 @@ export default function Map({
     ))}
 </section>
 
-                            {/* Add the new charging button section */}
-                            <section className='bg-[var(--cardblack)] rounded-3xl p-7 w-full'>
-    <button
-        ref={chargingButtonRef}
-        onClick={() => {
-            if (selectedPort) {
-                // Get all ports for this station
-                const stationPorts = ports.filter(p => p.station_id === station.id);
-                // Find the port number (1-based index)
-                const portNumber = stationPorts.findIndex(p => p.id === selectedPort.id) + 1;
-
-                const url = `/charging?` + new URLSearchParams({
-                    station: station.id.toString(),
-                    name: station.name,
-                    port: selectedPort.id.toString(),
-                    power: selectedPort.power_kw.toString(),
-                    portNumber: portNumber.toString()
-                }).toString();
-
-                router.push(url);
-                // Close the map modal after selection
-                setActiveMarker(null);
-            }
-        }}
-        className={`w-full py-4 transition-colors rounded-xl text-2xl font-semibold ${
-            selectedPort 
-                ? 'bg-[var(--yellow)] hover:bg-yellow-600' 
-                : 'bg-gray-600 cursor-not-allowed'
-        }`}
-        disabled={!selectedPort}
-    >
-        {!ports.some(port => port.station_id === station.id && port.status === 'wolny')
-            ? 'Brak wolnych portów'
-            : !selectedPort
-            ? 'Wybierz port'
-            : 'Rozpocznij ładowanie'
-        }
-    </button>
-</section>
 
                         </main>
                     </div>

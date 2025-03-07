@@ -115,7 +115,7 @@ export function VehicleForm({ onSuccess }: VehicleFormProps) {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 p-4">
-            <div className="bg-[var(--cardblack)] border border-[var(--yellow)] p-4 sm:p-6 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-white relative">
+            <div className="bg-[var(--cardblack)] border border-[var(--yellow)] p-4 sm:p-6 rounded-lg w-full max-lg:w-[95%] lg:w-[30%] text-[--text-color] relative">
                 <h2 className="text-xl max-lg:text-2xl font-semibold mb-4 pr-8">
                     Dodaj nowy pojazd
                 </h2>
